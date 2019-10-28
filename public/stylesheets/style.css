@@ -16,6 +16,12 @@ a {
 	position:relative;
 }
 
+#login {
+	width:250px;
+	position:absolute;
+	top:150px; left:0;
+}
+
 #userList {
 	margin:0 0 30px 0;
 }

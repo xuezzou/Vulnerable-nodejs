@@ -3,7 +3,14 @@ var userListData = [];
 
 // DOM Ready =============================================================
 $(document).ready(function() {
+  adminRendering();
+  userRendering();
+});
 
+// Functions =============================================================
+
+// These are actions corresponding to the admin interface
+function adminRendering() {
   // Populate the user table on initial page load
   populateTable();
 
@@ -15,10 +22,15 @@ $(document).ready(function() {
 
   // Delete User link click
   $('#userList table tbody').on('click', 'td a.linkdeleteuser', deleteUser);
+}
 
-});
+// These are actions corresponding to the user interface
+function userRendering() {
+  $('#btnLogin').on('click', loginUser);
+}
 
-// Functions =============================================================
+// More Functions for Admin Panel =============================================================
+
 
 // Fill table with data
 function populateTable() {
@@ -89,7 +101,8 @@ function addUser(event) {
       'fullname': $('#addUser fieldset input#inputUserFullname').val(),
       'age': $('#addUser fieldset input#inputUserAge').val(),
       'location': $('#addUser fieldset input#inputUserLocation').val(),
-      'gender': $('#addUser fieldset input#inputUserGender').val()
+      'gender': $('#addUser fieldset input#inputUserGender').val(),
+      'password': $('#addUser fieldset input#inputUserName').val()
     }
 
     // Use AJAX to post the object to our adduser service
@@ -163,3 +176,95 @@ function deleteUser(event) {
   }
 
 };
+
+// More Functions for User Panel =============================================================
+
+function loginUser() {
+  event.preventDefault();
+
+  // Super basic validation - increase errorCount variable if any fields are blank
+  var errorCount = 0;
+  $('#addUser input').each(function(index, val) {
+    if($(this).val() === '') { errorCount++; }
+  });
+
+  // Check and make sure errorCount's still at zero
+  if(errorCount === 0) {
+
+    // If it is, compile all user info into one object
+    var newUser = {
+      'username': $('#addUser fieldset input#inputUserName').val(),
+      'email': $('#addUser fieldset input#inputUserEmail').val(),
+      'fullname': $('#addUser fieldset input#inputUserFullname').val(),
+      'age': $('#addUser fieldset input#inputUserAge').val(),
+      'location': $('#addUser fieldset input#inputUserLocation').val(),
+      'gender': $('#addUser fieldset input#inputUserGender').val()
+    }
+
+    // Use AJAX to post the object to our adduser service
+    $.ajax({
+      type: 'POST',
+      data: newUser,
+      url: '/users/adduser',
+      dataType: 'JSON'
+    }).done(function( response ) {
+
+      // Check for successful (blank) response
+      if (response.msg === '') {
+
+        // Clear the form inputs
+        $('#addUser fieldset input').val('');
+
+        // Update the table
+        populateTable();
+
+      }
+      else {
+
+        // If something goes wrong, alert the error message that our service returned
+        alert('Error: ' + response.msg);
+
+      }
+    });
+  }
+  else {
+    // If errorCount is more than 0, error out
+    alert('Please fill in all fields');
+    return false;
+  }
+};
+
+// Delete User
+function deleteUser(event) {
+
+  event.preventDefault();
+
+  // Check and make sure the user confirmed
+  if (confirmation === true) {
+
+    // If they did, do our delete
+    $.ajax({
+      type: 'DELETE',
+      url: '/users/deleteuser/' + $(this).attr('rel')
+    }).done(function( response ) {
+
+      // Check for a successful (blank) response
+      if (response.msg === '') {
+      }
+      else {
+        alert('Error: ' + response.msg);
+      }
+
+      // Update the table
+      populateTable();
+
+    });
+
+  }
+  else {
+
+    // If they said no to the confirm, do nothing
+    return false;
+
+  }
+}
