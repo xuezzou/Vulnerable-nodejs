@@ -9,8 +9,9 @@ var mongo = require('mongodb');
 var monk = require('monk');
 var db = monk('localhost:27017/nodetest2');
 
-var indexRouter = require('./routes/index');
+var adminRouter = require('./routes/admin');
 var usersRouter = require('./routes/users');
+var loginRouter = require('./routes/index');
 
 var app = express();
 
@@ -30,8 +31,9 @@ app.use(function(req,res,next){
     next();
 });
 
-app.use('/', indexRouter);
+app.use('/', adminRouter);
 app.use('/users', usersRouter);
+app.use('/', loginRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
