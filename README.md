@@ -22,3 +22,5 @@ Christopher Buecheler is a front-end developer for a small San Francisco startup
 * README.md - this file
 * app.js - central app file for tutorial project
 * package.json - package info for tutorial project
+
+`mongod --dbpath ~/Documents/mongo/db`
