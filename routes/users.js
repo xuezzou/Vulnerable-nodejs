@@ -55,7 +55,6 @@ router.post('/session', async function (req, res) {
     // query for the username
     var db = req.db;
     var collection = db.get('userlist');
-    console.log(req.body)
     var user = await collection.findOne({ "username": req.body.username });
     if (!user) {
       res.send({ msg: "username not exist" });
@@ -108,30 +107,22 @@ router.get('/', (req, res) => {
 router.put('/modify', async function (req, res) {
   // check is login
   if (!req.session.user) {
-    res.send({ msg: "login first" });
-    return;
-  }
-  var db = req.db;
-  var collection = db.get('userlist');
-  var user = await collection.findOne({ "username": req.body.username });
-  if (!user) {
-    res.send({ msg: "username not exist" });
+    res.send({ msg: "login first" }).end();
   } else {
-    if (user.password !== req.body.password) {
-      res.send({ msg: "password is incorrect" });
-    } else {
-      // sucessfully login
-      req.session.regenerate(() => {
-        req.session.user = user;
-        console.log(
-          `Session.login success: ${req.session.user.username}`
-        );
-        // If a match, return 200:{ username }
-        res.status(200).send({
-          username: user.username,
-        });
-      });
-    }
+    var db = req.db;
+    var collection = db.get('userlist');
+    var query = req.body;
+    // update the corresponding fields
+    collection.findOneAndUpdate({ 'username': req.session.user.username }, { $set: query }, function (err, result) {
+      // update session too
+      if(result) {
+        req.session.user = result;
+      }
+      res.send(
+        (err === null) ? { msg: '' } : { msg: err }
+      );
+    });
+
   }
 });
 

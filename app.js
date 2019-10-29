@@ -25,6 +25,7 @@ app.use(session({
   secret: "Shh, its a secret!",
   resave: true,
   saveUninitialized: true,
+  expires: new Date(Date.now() + (30 * 86400 * 1000)),
 }));
 
 app.use(logger('dev'));

@@ -4,7 +4,7 @@ var userListData = [];
 // DOM Ready =============================================================
 $(document).ready(function () {
   if (window.location.pathname === '/') {
-    userRendering();    
+    userRendering();
   } else if (window.location.pathname === '/admin') {
     adminRendering();
   }
@@ -160,7 +160,7 @@ function initUserSession() {
   }).done(function (response) {
     if (response.user) {
       setLogin();
-    }  else {
+    } else {
       reset();
     }
   });
@@ -183,7 +183,7 @@ function loginUser() {
     // Check for successful response
     if (response && response.username === user.username) {
       setLogin();
-    }  else {
+    } else {
       // If something goes wrong, alert the error message that our service returned
       alert('Error: ' + response.msg);
     }
@@ -196,10 +196,9 @@ function logoutUser() {
   $.ajax({
     type: 'DELETE',
     url: '/users/session'
-  }).done(function (response) {
-    console.log(response);
+  }).done(function () {
+    reset();
   });
-  reset();
 }
 
 // set the interface after login
@@ -243,15 +242,37 @@ function populateUserInfo() {
 // modify uservalue
 function modifyUser() {
   event.preventDefault();
-  var newUser = {
-    'username': $('#addUser fieldset input#inputUserName').val(),
-    'email': $('#addUser fieldset input#inputUserEmail').val(),
-    'fullname': $('#addUser fieldset input#inputUserFullname').val(),
-    'age': $('#addUser fieldset input#inputUserAge').val(),
-    'location': $('#addUser fieldset input#inputUserLocation').val(),
-    'gender': $('#addUser fieldset input#inputUserGender').val(),
-    'password': $('#addUser fieldset input#inputUserName').val()
+  var modifyUser = {
+    'password': $('#modifyPassword').val(),
+    'email': $('#modifyUserEmail').val(),
+    'fullname': $('#modifyUserFullname').val(),
+    'age': $('#modifyUserAge').val(),
+    'location': $('#modifyUserLocation').val(),
+    'gender': $('#modifyUserGender').val(),
   }
-  // after sucessful modification, update on the table
-  populateUserInfo();
+  // delete blank fields
+  Object.keys(modifyUser).forEach((key) => {(modifyUser[key] === "") && delete modifyUser[key]});
+  $.ajax({
+    type: "PUT",
+    data: modifyUser,
+    url: '/users/modify',
+    dataType: 'JSON',
+  }).done(function (response) {
+    // Check for successful (blank) response
+    if (response.msg === '') {
+      // after sucessful modification, update on the table
+      setLogin();
+      $('#modifyPassword').val('');
+      $('#modifyUserEmail').val('');
+      $('#modifyUserFullname').val('');
+      $('#modifyUserAge').val('');
+      $('#modifyUserLocation').val('');
+      $('#modifyUserGender').val('');
+    }
+    else {
+      // If something goes wrong, alert the error message that our service returned
+      alert('Error: ' + response.msg);
+    }
+  });
+
 }
