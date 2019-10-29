@@ -2,7 +2,7 @@
 var userListData = [];
 
 // DOM Ready =============================================================
-$(document).ready(function() {
+$(document).ready(function () {
   adminRendering();
   userRendering();
 });
@@ -36,13 +36,13 @@ function populateTable() {
   var tableContent = '';
 
   // jQuery AJAX call for JSON
-  $.getJSON( '/users/userlist', function( data ) {
+  $.getJSON('/users/userlist', function (data) {
 
     // Stick our user data array into a userlist variable in the global object
     userListData = data;
 
     // For each item in our JSON, add a table row and cells to the content string
-    $.each(data, function(){
+    $.each(data, function () {
       tableContent += '<tr>';
       tableContent += '<td><a href="#" class="linkshowuser" rel="' + this.username + '" title="Show Details">' + this.username + '</a></td>';
       tableContent += '<td>' + this.email + '</td>';
@@ -65,7 +65,7 @@ function showUserInfo(event) {
   var thisUserName = $(this).attr('rel');
 
   // Get Index of object based on id value
-  var arrayPosition = userListData.map(function(arrayItem) { return arrayItem.username; }).indexOf(thisUserName);
+  var arrayPosition = userListData.map(function (arrayItem) { return arrayItem.username; }).indexOf(thisUserName);
 
   // Get our User Object
   var thisUserObject = userListData[arrayPosition];
@@ -84,12 +84,12 @@ function addUser(event) {
 
   // Super basic validation - increase errorCount variable if any fields are blank
   var errorCount = 0;
-  $('#addUser input').each(function(index, val) {
-    if($(this).val() === '') { errorCount++; }
+  $('#addUser input').each(function (index, val) {
+    if ($(this).val() === '') { errorCount++; }
   });
 
   // Check and make sure errorCount's still at zero
-  if(errorCount === 0) {
+  if (errorCount === 0) {
 
     // If it is, compile all user info into one object
     var newUser = {
@@ -108,7 +108,7 @@ function addUser(event) {
       data: newUser,
       url: '/users/adduser',
       dataType: 'JSON'
-    }).done(function( response ) {
+    }).done(function (response) {
 
       // Check for successful (blank) response
       if (response.msg === '') {
@@ -137,20 +137,16 @@ function addUser(event) {
 
 // Delete User
 function deleteUser(event) {
-
   event.preventDefault();
-
   // Pop up a confirmation dialog
   var confirmation = confirm('Are you sure you want to delete this user?');
-
   // Check and make sure the user confirmed
   if (confirmation === true) {
-
     // If they did, do our delete
     $.ajax({
       type: 'DELETE',
       url: '/users/deleteuser/' + $(this).attr('rel')
-    }).done(function( response ) {
+    }).done(function (response) {
 
       // Check for a successful (blank) response
       if (response.msg === '') {
@@ -158,20 +154,14 @@ function deleteUser(event) {
       else {
         alert('Error: ' + response.msg);
       }
-
       // Update the table
       populateTable();
-
     });
-
   }
   else {
-
     // If they said no to the confirm, do nothing
     return false;
-
   }
-
 };
 
 // More Functions for User Panel =============================================================
@@ -179,43 +169,35 @@ function deleteUser(event) {
 function loginUser() {
   event.preventDefault();
 
-  // Super basic validation - increase errorCount variable if any fields are blank
-  var errorCount = 0;
-  $('#login input').each(function(index, val) {
-    if($(this).val() === '') { errorCount++; }
+  var user = {
+    'username': $('#login fieldset input#loginUserName').val(),
+    'password': $('#login fieldset input#loginPassword').val(),
+  }
+  // Use AJAX to post the object to our adduser service
+  $.ajax({
+    type: 'POST',
+    data: user,
+    url: '/users/session',
+    dataType: 'JSON'
+  }).done(function (response) {
+    console.log(response);
+    // Check for successful response
+    if (response && response.username === user.username) {
+      // hide the form inputs
+      $('#login fieldset input').hide();
+      // show logout button
+      $('#btnLogin').text('Logout');
+    } else if (response && response.destroy) {
+      // reshow the login button and clear the modify table
+            // hide the form inputs
+            $('#login fieldset input').show();
+            // show logout button
+            $('#btnLogin').text('Login');
+    } else {
+      // If something goes wrong, alert the error message that our service returned
+
+      alert('Error: ' + response.msg);
+    }
   });
 
-  // Check and make sure errorCount's still at zero
-  if(errorCount === 0) {
-    // If it is, compile all user info into one object
-    var user = {
-      'username': $('#login fieldset input#loginUserName').val(),
-      'password': $('#login fieldset input#loginPassword').val(),
-    }
-    // Use AJAX to post the object to our adduser service
-    $.ajax({
-      type: 'POST',
-      data: user,
-      url: '/users/authenticate',
-      dataType: 'JSON'
-    }).done(function( response ) {
-      // Check for successful response
-      if (response && response.username === user.username) {
-
-        // hide the form inputs
-        $('#login fieldset input').hide();
-
-        // show logout button
-      }
-      else {
-        // If something goes wrong, alert the error message that our service returned
-        alert('Error: ' + response.msg);
-      }
-    });
-  }
-  else {
-    // If errorCount is more than 0, error out
-    alert('Please fill in all fields');
-    return false;
-  }
 };
