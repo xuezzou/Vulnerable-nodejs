@@ -44,21 +44,18 @@ router.delete('/deleteuser/:id', function (req, res) {
 
 /* authenticate and login user */
 router.post('/session', async function (req, res) {
-  // session exists
+  // session exists and send it back
   if (req.session.user) {
-    console.log(
-      `Session.login destroy: ${req.session.user.username}`
-    );
-    req.session.destroy(() => {
-      res.status(200).send({ destroy: true }).end();
-    });
+    res.send({ user: req.session.user });
   } else {
     // check the field should not be blank
     if (req.body.username === '' || req.body.password === '') {
       res.send({ msg: "Please fill in all fields" }).end();
     }
+    // query for the username
     var db = req.db;
     var collection = db.get('userlist');
+    console.log(req.body)
     var user = await collection.findOne({ "username": req.body.username });
     if (!user) {
       res.send({ msg: "username not exist" });
@@ -86,11 +83,23 @@ router.post('/session', async function (req, res) {
   }
 });
 
+/* delete a user's session */
+router.delete('/session', (req, res) => {
+  if (req.session.user) {
+    console.log(
+      `Session.login destroy: ${req.session.user.username}`
+    );
+    req.session.destroy(() => {
+      res.status(204).end();
+    });
+  }
+});
+
 /* get info of the current user in session */
 router.get('/', (req, res) => {
   if (req.session.user) {
     res.status(200).send({ user: req.session.user }).end();
-  } else{
+  } else {
     res.send({ msg: "Something bad happens" });
   }
 });

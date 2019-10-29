@@ -3,11 +3,10 @@ var userListData = [];
 
 // DOM Ready =============================================================
 $(document).ready(function () {
-  if(window.location.pathname === '/') {
+  if (window.location.pathname === '/') {
+    userRendering();    
+  } else if (window.location.pathname === '/admin') {
     adminRendering();
-  } else if(window.location.pathname === '/admin') {
-    userRendering();
-
   }
 });
 
@@ -18,27 +17,23 @@ function adminRendering() {
   // Populate the user table on initial page load
   populateTable();
   // Username link click
-  $('#userList table tbody').on('click', 'td a.linkshowuser', showUserInfo);
+  $('.userList table tbody').on('click', 'td a.linkshowuser', showUserInfo);
   // Add User button click
   $('#btnAddUser').on('click', addUser);
   // Delete User link click
-  $('#userList table tbody').on('click', 'td a.linkdeleteuser', deleteUser);
+  $('.userList table tbody').on('click', 'td a.linkdeleteuser', deleteUser);
 }
 
 // More Functions for Admin Panel =============================================================
 
 // Fill table with data
 function populateTable() {
-
   // Empty content string
   var tableContent = '';
-
   // jQuery AJAX call for JSON
   $.getJSON('/users/userlist', function (data) {
-
     // Stick our user data array into a userlist variable in the global object
     userListData = data;
-
     // For each item in our JSON, add a table row and cells to the content string
     $.each(data, function () {
       tableContent += '<tr>';
@@ -47,48 +42,38 @@ function populateTable() {
       tableContent += '<td><a href="#" class="linkdeleteuser" rel="' + this._id + '">delete</a></td>';
       tableContent += '</tr>';
     });
-
     // Inject the whole content string into our existing HTML table
-    $('#userList table tbody').html(tableContent);
+    $('.userList table tbody').html(tableContent);
   });
 };
 
 // Show User Info
 function showUserInfo(event) {
-
   // Prevent Link from Firing
   event.preventDefault();
-
   // Retrieve username from link rel attribute
   var thisUserName = $(this).attr('rel');
-
   // Get Index of object based on id value
   var arrayPosition = userListData.map(function (arrayItem) { return arrayItem.username; }).indexOf(thisUserName);
-
   // Get our User Object
   var thisUserObject = userListData[arrayPosition];
-
   //Populate Info Box
   $('#userInfoName').text(thisUserObject.fullname);
   $('#userInfoAge').text(thisUserObject.age);
   $('#userInfoGender').text(thisUserObject.gender);
   $('#userInfoLocation').text(thisUserObject.location);
-
 };
 
 // Add User
 function addUser(event) {
   event.preventDefault();
-
   // Super basic validation - increase errorCount variable if any fields are blank
   var errorCount = 0;
   $('#addUser input').each(function (index, val) {
     if ($(this).val() === '') { errorCount++; }
   });
-
   // Check and make sure errorCount's still at zero
   if (errorCount === 0) {
-
     // If it is, compile all user info into one object
     var newUser = {
       'username': $('#addUser fieldset input#inputUserName').val(),
@@ -99,7 +84,6 @@ function addUser(event) {
       'gender': $('#addUser fieldset input#inputUserGender').val(),
       'password': $('#addUser fieldset input#inputUserName').val()
     }
-
     // Use AJAX to post the object to our adduser service
     $.ajax({
       type: 'POST',
@@ -107,22 +91,16 @@ function addUser(event) {
       url: '/users/adduser',
       dataType: 'JSON'
     }).done(function (response) {
-
       // Check for successful (blank) response
       if (response.msg === '') {
-
         // Clear the form inputs
         $('#addUser fieldset input').val('');
-
         // Update the table
         populateTable();
-
       }
       else {
-
         // If something goes wrong, alert the error message that our service returned
         alert('Error: ' + response.msg);
-
       }
     });
   }
@@ -145,7 +123,6 @@ function deleteUser(event) {
       type: 'DELETE',
       url: '/users/deleteuser/' + $(this).attr('rel')
     }).done(function (response) {
-
       // Check for a successful (blank) response
       if (response.msg === '') {
       }
@@ -162,8 +139,34 @@ function deleteUser(event) {
   }
 };
 
+
 // More Functions for User Panel =============================================================
 
+// These are actions corresponding to the user interface
+function userRendering() {
+  $('#btnLogin').on('click', loginUser);
+  $('#btnLogout').on('click', logoutUser);
+  $('#btnModify').on('click', modifyUser);
+  initUserSession();
+}
+
+// initiate a user session when loading the page
+function initUserSession() {
+  $.ajax({
+    type: 'POST',
+    data: {},
+    url: '/users/session',
+    dataType: 'JSON'
+  }).done(function (response) {
+    if (response.user) {
+      setLogin();
+    }  else {
+      reset();
+    }
+  });
+}
+
+// function that logins the user when clicks login button
 function loginUser() {
   event.preventDefault();
   var user = {
@@ -179,31 +182,51 @@ function loginUser() {
   }).done(function (response) {
     // Check for successful response
     if (response && response.username === user.username) {
-      // hide the form inputs
-      $('#login .userList fieldset input').hide();
-      // show logout button
-      $('#btnLogin').text('Logout');
-      $('#modifyList').show();
-      populateUserInfo();
-    // log out
-    } else if (response && response.destroy) {
-      // reshow the login button and clear the modify table
-      // hide the form inputs
-      $('#login .userList fieldset input').show();
-      // show logout button
-      $('#btnLogin').text('Login');
-      // clear table
-      $('#myInfoName').text('');
-      $('#myInfoAge').text('');
-      $('#myInfoGender').text('');
-      $('#myInfoLocation').text('');
-      $('#modifyList').hide();
-    } else {
+      setLogin();
+    }  else {
       // If something goes wrong, alert the error message that our service returned
       alert('Error: ' + response.msg);
     }
   });
 };
+
+// function that ends a user session
+function logoutUser() {
+  event.preventDefault();
+  $.ajax({
+    type: 'DELETE',
+    url: '/users/session'
+  }).done(function (response) {
+    console.log(response);
+  });
+  reset();
+}
+
+// set the interface after login
+function setLogin() {
+  // hide the form inputs
+  $('#login .userList fieldset input').hide();
+  // show logout button
+  $('#btnLogin').hide();
+  $('#btnLogout').show();
+  $('#modifyList').show();
+  populateUserInfo();
+}
+
+// reset after user log out
+function reset() {
+  // hide the form inputs
+  $('#login .userList fieldset input').show();
+  // show logout button
+  $('#btnLogin').show();
+  $('#btnLogout').hide();
+  // clear table
+  $('#myInfoName').text('');
+  $('#myInfoAge').text('');
+  $('#myInfoGender').text('');
+  $('#myInfoLocation').text('');
+  $('#modifyList').hide();
+}
 
 // populate user info onto the My info table
 function populateUserInfo() {
@@ -216,3 +239,19 @@ function populateUserInfo() {
     $('#myInfoLocation').text(data.user.location);
   });
 };
+
+// modify uservalue
+function modifyUser() {
+  event.preventDefault();
+  var newUser = {
+    'username': $('#addUser fieldset input#inputUserName').val(),
+    'email': $('#addUser fieldset input#inputUserEmail').val(),
+    'fullname': $('#addUser fieldset input#inputUserFullname').val(),
+    'age': $('#addUser fieldset input#inputUserAge').val(),
+    'location': $('#addUser fieldset input#inputUserLocation').val(),
+    'gender': $('#addUser fieldset input#inputUserGender').val(),
+    'password': $('#addUser fieldset input#inputUserName').val()
+  }
+  // after sucessful modification, update on the table
+  populateUserInfo();
+}
