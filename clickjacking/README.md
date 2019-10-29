@@ -1,10 +1,10 @@
-## Cyber-security Final Project: Clickjacking Attack on YES
+## Clickjacking Attack on YES
 
 by *Xue Zou*
 
 ### Overview
 
-The final project for course cyber-security aims to **improve cyber-security at Vanderbilt**. My final project aim to mainly address one issue I found in Vanderbilt's student [YES](https://yes.vanderbilt.edu) system and demo possible [Clickjacking](https://www.owasp.org/index.php/Clickjacking) attack on the system, additionally, suggest possible solutions of fixing of the vulnerability.
+This directory aims to address one issue I found in Vanderbilt's student [YES](https://yes.vanderbilt.edu) system and demo possible [Clickjacking](https://www.owasp.org/index.php/Clickjacking) attack on the system, additionally, suggest possible fixing of the vulnerability.
 
 ### Description
 
@@ -34,6 +34,7 @@ Then to further exploit the vulnerability, assume that the victim is already log
 ```
 
 When the victim open the link, it is
+
 <img src="demo_pic1.png" width="55%" />
 
 Here’s the key to a clickjacking attack: the target content is hidden and the attacker’s content sits over the top and effectively tricks the victim into clicking links they don’t know they’re clicking. 
@@ -82,33 +83,7 @@ To implement this approach, a possibly simple way is to implement a filter that 
 More information about other method of defense against clickjacking could be from [Clickjacking Defense cheat sheet](https://cheatsheetseries.owasp.org/cheatsheets/Clickjacking_Defense_Cheat_Sheet.html) from owasp.
 
 
-### Answer to Heilmeier questions
-
-1. *How is it done today, and what are the limits of current practice?*
-In the current YES system, no X-Frame-Options header is included in the HTTP response. Without the projection 
-
-2. *What is new in your approach and why do you think it will be successful?*
-The new approach is to to implement a filter that automatically adds the header to every page or to add it at Web Application Firewall of Web/Application Server level.
-
-3. *Who cares? If you are successful, what difference will it make?*
-Users of YES system and developers of YES system should care because resolving this vulnerability issue could help improve the security of the system and thus benefit them from being attacked.
-
-4. *What are the risks?*
-If the security issue is not fixed, the system is vulnerable to clickjacking attack.
-
-5. *How much will it cost? If your approach isn't free, think carefully about the cost to use or implement what you propose.*
-To fix the issue I believe it would only take some simple steps.
-
-6. *How long will it take?*
-The project would take the later half of the course.
-
-7. *What are the mid-term and final “exams” to check for success?*
-For mid-term exams to check for success, I want to propose some *fixes* for prevention of clickjacking attack on YES. For final exam for this project, I am going to demonstrate the project in a *final video* and showcase my result.
-
-
-### Other Failed Attempts
-
-Here are some other failed attempts I've made to attack Vanderbilt's websites. 
+### Other Attempts
 
 #### **[CSRF Attack](https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF))**
 
@@ -135,7 +110,9 @@ await fetch("https://acad.app.vanderbilt.edu/more/StudentClassExecute!add.action
 ```
 
 But I got rejected because of [same origin policy](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy). 
-`Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://acad.app.vanderbilt.edu/more/StudentClassExecute!add.action?classNumber=4837&selectedTermCode=0940. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing).`
+```
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://acad.app.vanderbilt.edu/more/StudentClassExecute!add.action?classNumber=4837&selectedTermCode=0940. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing).
+```
 
 Although there's no auti-csrf token presented, the Same Origin Policy which restricts how a document or script loaded from one origin can interact with a resource from another origin, helps prevents the cross-site request and thus also prevents CSRF attack. 
 
@@ -143,11 +120,11 @@ CORS which represents, The *Cross-origin resource sharing*, allows restricted re
 
 Some additional notes here: some browsers with [partial CORS support](https://caniuse.com/#search=CORS) allow cross site XHR requests (e.g. IE 10 and earlier), though they do not allow custom headers to be appended. In CORS supported browsers the Origin header cannot be set, preventing an attacker from spoofing this.
 
-#### **Slow Loris Attack**
+#### **Slow Loris Attack** (not related to YES)
 
 Slow Loris Attack is an really interesting type of denial-of-service attack I've found, probably because of the cute naming of slow-moving Asian primate. To explain the process, the attacker sends HTTP request in pieces s l o w l y, one at a time to the web server. So the server waits patiently until all the data shows up, this eventually won't end according to the attack specifications. 
 
-Since the targeted server will only has so many threads available to handle concurrent connections. Each server thread will attempt to stay alive while waiting for the slow request to complete, which never occurs. When the server’s maximum possible connections has been exceeded, each additional connection will not be answered and denial-of-service will occur. 
+Since the targeted server will only has so many threads available to handle concurrent connections. Each server thread will attempt to stay alive while waiting for the slow request to complete, which never occurs. When the server’s maximum possible connections has been exceeded, each additional connection will not be answered and denial-of-service will occur. Slow loris has proven highly-effective against many popular types of web server software, including Apache 1.x and 2.x, 
 
 An interesting analogy is like: imagine sending 100 old grandmas to a store, with all of them trying to tell a story from their childhood to the cashier so that no other customers can buy anything, and the cashier won't kick the grandmas out of the store until they end up telling the story. [2]
 
@@ -156,25 +133,16 @@ Here's an nice illustration of slow loris attack from [6]:
 <img src="slow_loris_pic.png"  width="40%" />
 
 
-Since I found that the YES system in run on apache tomcat server, which I observe from the response text of requests, and Slow loris has proven highly-effective against many popular types of web server software, including Apache 1.x and 2.x, I thought there might be a possibility for slow loris attack.
+To test if the system is vulnerable to slow loris attack, one can installed tool [`slowhttptest`](https://github.com/shekyan/slowhttptest) on a Linux virtual machine, which is a highly configurable tool that simulates some Application Layer Denial of Service attacks by prolonging HTTP connections in different ways. 
 
-To test if the system is vulnerable to slow loris attack, I installed tool [`slowhttptest`](https://github.com/shekyan/slowhttptest) on a Linux virtual machine, which is a highly configurable tool that simulates some Application Layer Denial of Service attacks by prolonging HTTP connections in different ways.
-
-Then I run the tool against both vanderbilt.edu and yes.vanderbilt.edu.
-For example, to run against vanderbilt.edu I have
+To run the tool, in the command line, one can do
 ```
-slowhttptest -c 25000 -H -g -o ./output_file -i 10 -r 200 -t GET -u https://www.vanderbilt.edu/ -x 24 -p 2
+slowhttptest -c 500 -H -g -o ./output_file -i 10 -r 200 -t GET -u [target website's url] -x 24 -p 2
 ```
-The parmaeter -c specifies the target number of connections to establish during the test (normally with 200 should be enough to hang a server that doesn't have protection against this attack), however after testing 200 is good I increment the connections step by step to 25000.
-
-Here is a screenshot of test output from the code on linux machine. 
-<img src="output_slowloris.png" width="60%"/>
-As we can see from the plot that that most of time the server is available, thus, I conclude that it is not vulnerable to slow loris attack, possibly due to the huge server availability and other protection mechanisms.
+The parmaeter -c specifies the target number of connections to establish during the test (normally with 200 should be enough to hang a server that doesn't have protection against this attack). Afterwards, a output chart would display the test result about if the site is vulnerable to slow loris attack.
 
 
-### Reference 
-
-[1] Tool [ZAP](https://github.com/zaproxy/zaproxy) from OWASP 
+### References
 
 [2] Article [How to perform a DoS attack "Slow HTTP" with SlowHTTPTest (test your server Slowloris protection) in Kali Linux](https://ourcodeworld.com/articles/read/949/how-to-perform-a-dos-attack-slow-http-with-slowhttptest-test-your-server-slowloris-protection-in-kali-linux)
 
