@@ -181,7 +181,8 @@ function loginUser() {
     dataType: 'JSON'
   }).done(function (response) {
     // Check for successful response
-    if (response && response.username === user.username) {
+    // can add  === user.username
+    if (response && response.username) {
       setLogin();
     } else {
       // If something goes wrong, alert the error message that our service returned
