@@ -3,8 +3,12 @@ var userListData = [];
 
 // DOM Ready =============================================================
 $(document).ready(function () {
-  adminRendering();
-  userRendering();
+  if(window.location.pathname === '/') {
+    adminRendering();
+  } else if(window.location.pathname === '/admin') {
+    userRendering();
+
+  }
 });
 
 // Functions =============================================================
@@ -21,13 +25,7 @@ function adminRendering() {
   $('#userList table tbody').on('click', 'td a.linkdeleteuser', deleteUser);
 }
 
-// These are actions corresponding to the user interface
-function userRendering() {
-  $('#btnLogin').on('click', loginUser);
-}
-
 // More Functions for Admin Panel =============================================================
-
 
 // Fill table with data
 function populateTable() {
@@ -168,7 +166,6 @@ function deleteUser(event) {
 
 function loginUser() {
   event.preventDefault();
-
   var user = {
     'username': $('#login fieldset input#loginUserName').val(),
     'password': $('#login fieldset input#loginPassword').val(),
@@ -180,24 +177,42 @@ function loginUser() {
     url: '/users/session',
     dataType: 'JSON'
   }).done(function (response) {
-    console.log(response);
     // Check for successful response
     if (response && response.username === user.username) {
       // hide the form inputs
-      $('#login fieldset input').hide();
+      $('#login .userList fieldset input').hide();
       // show logout button
       $('#btnLogin').text('Logout');
+      $('#modifyList').show();
+      populateUserInfo();
+    // log out
     } else if (response && response.destroy) {
       // reshow the login button and clear the modify table
-            // hide the form inputs
-            $('#login fieldset input').show();
-            // show logout button
-            $('#btnLogin').text('Login');
+      // hide the form inputs
+      $('#login .userList fieldset input').show();
+      // show logout button
+      $('#btnLogin').text('Login');
+      // clear table
+      $('#myInfoName').text('');
+      $('#myInfoAge').text('');
+      $('#myInfoGender').text('');
+      $('#myInfoLocation').text('');
+      $('#modifyList').hide();
     } else {
       // If something goes wrong, alert the error message that our service returned
-
       alert('Error: ' + response.msg);
     }
   });
+};
 
+// populate user info onto the My info table
+function populateUserInfo() {
+  // jQuery AJAX call for JSON
+  $.getJSON('/users', function (data) {
+    //Populate Info Box
+    $('#myInfoName').text(data.user.fullname);
+    $('#myInfoAge').text(data.user.age);
+    $('#myInfoGender').text(data.user.gender);
+    $('#myInfoLocation').text(data.user.location);
+  });
 };

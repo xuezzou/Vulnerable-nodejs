@@ -16,32 +16,26 @@ a {
 	position:relative;
 }
 
-#login {
-	width:250px;
-	position:absolute;
-	top:150px; left:0;
-}
-
-#userList {
+.userList {
 	margin:0 0 30px 0;
 }
-	#userList table {
+	.userList table {
 		border-collapse:separate;
 		border-spacing:1px;
 		background:#CCC;
 	}
-		#userList table th {
+		.userList table th {
 			background:#EEE;
 			font-weight:600;
 			padding:10px 20px;
 			text-align:center;
 		}
-		#userList table tbody {
+		.userList table tbody {
 			padding:0; margin:0;
 			border-collapse:collapse;
 			border-spacing:0px;
 		}
-			#userList table td {
+			.userList table td {
 				background:#FFF;
 				padding:5px 10px;
 				text-align:center;

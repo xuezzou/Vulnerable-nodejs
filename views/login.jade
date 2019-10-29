@@ -25,29 +25,31 @@ block content
     // /MY INFO
 
     // USER LOGIN
-    #login
+    #login 
       h2 Login
-      fieldset
-        input#loginUserName(type='text', placeholder='Username')
-        input#loginPassword(type='text', placeholder='Password')
-        br
-        button#btnLogin Login
-    // /USER LOGIN
+      .userList
+        fieldset
+          input#loginUserName(type='text', placeholder='Username')
+          input#loginPassword(type='text', placeholder='Password')
+          br
+          button#btnLogin Login
+      // /USER LOGIN
 
     // MODIFY USER INFO
-    h2 Modify My Info
-    #modify
-      fieldset
-        input#modifyPassword(type='text', placeholder='Password')
-        input#modifyUserEmail(type='text', placeholder='Email')
-        br
-        input#modifyUserFullname(type='text', placeholder='Full Name')
-        input#imodifyUserAge(type='text', placeholder='Age')
-        br
-        input#modifyUserLocation(type='text', placeholder='Location')
-        input#modifyUserGender(type='text', placeholder='gender')
-        br
-        button#btnModify Modify
+    #modifyList
+      h2 Modify My Info
+      .userList
+        fieldset
+          input#modifyPassword(type='text', placeholder='Password')
+          input#modifyUserEmail(type='text', placeholder='Email')
+          br
+          input#modifyUserFullname(type='text', placeholder='Full Name')
+          input#imodifyUserAge(type='text', placeholder='Age')
+          br
+          input#modifyUserLocation(type='text', placeholder='Location')
+          input#modifyUserGender(type='text', placeholder='gender')
+          br
+          button#btnModify Modify
     // /MODIFY USER INFO
 
   // /WRAPPER
