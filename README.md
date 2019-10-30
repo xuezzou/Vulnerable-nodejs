@@ -144,14 +144,14 @@ Here I would list how to exploit these vulnerabilities on the application and al
 
 1. **injection attack**
 
-    Normally people always talk about SQL Injection. However, Although we no longer deal with a query language in the form of a string like what we normally do with an injection attack, a [NoSQL injetion attack](https://www.owasp.org/index.php/Testing_for_NoSQL_injection) is also possible with their own operators and syntax. 
+    Normally people talk about SQL Injection. However, although we no longer deal with a query language in the form of a string, a [NoSQL injetion attack](https://www.owasp.org/index.php/Testing_for_NoSQL_injection) is also possible with their own operators and syntax. 
 
     In this application, when authenticating user into the system, we have a end point when doing a POST request to `/users/session`. And in this function (/routes/users.js, line 59, called by public/javascripts/global.js line 177), we get 
     ```javascript
     collection.findOne({ username: req.body.username, password: req.body.password })
     ```
 
-    Here we assume that the username field is coming from a deserialized JSON object, manipulation of the above query is easy. Such as, if one supplies a JSON document as the input to the application, an attacker will be able to perform the login bypass:
+    As we note in the request end point `/users/session`, there's no validation for username and password type to be string and also no proper sanitization on both the client and server side. Therefore, as we assume that the username field is coming from a deserialized JSON object, manipulation of the above query is easy. When the JSON document is deserialized, those fields may contain malicious input like below.
     ```javascript
     {
         "username": {"$gt": ""},
@@ -159,7 +159,7 @@ Here I would list how to exploit these vulnerabilities on the application and al
     }
     ```
 
-    As we noted in the request end point `/users/session`, (there's no validation for username and password type to be string and also no proper sanitization. Therefore, when the JSON document is deserialized, those fields may contain malicious input like the input above. In MongoDB, the field $gt has a special meaning, which is used as the greater than comparator. As such, the username and the password from the database will be compared to the empty string "" and as a result return a positive outcome, i.e. a true statement. Then the query would return the first user in the database and the end-point login that user.
+    In MongoDB, the field $gt has a special meaning, which is used as the greater than comparator. As such, the username and the password from the database will be compared to the empty string "" and as a result return a true statement. Then the query would return a user in the database and the end-point would login that user, and hence result a login bypass.
 
     To exploit such vulnerability in our application, we could have the following code in the console. Then when refreshing the page, we are in the session of a user in the database.
     ```javascript 
@@ -181,14 +181,11 @@ Here I would list how to exploit these vulnerabilities on the application and al
        "mode":"cors"});
     ```
 
-    The critical part is the body sent, which is `username[$gt]=&password[$gt]=`. Here in the application, when serializing and deserilizing json, url-encoded key-value pairs are used in communication. The string username[$gt]= is a special syntax used by the qs module (default in ExpressJS and the body-parser middleware). This syntax is the equivalent of making an JavaScript object/hash with a single parameter called $gt mapped to no value. In essence, the request above will result into a JavaScript object that looks like the one illustrated bellow:
-    ```   
-    { username: { '$gt': '' }, password: { '$gt': '' } }
-    ```
-    
-    Then we are able to perform a login bypass. For this particular attack example, it is also a design problem. When authenticating user, we have lots of other ways to accomplish it instead of do a query use both username and password.
+    The critical part is the body sent, which is `username[$gt]=&password[$gt]=`. Here in the application, when serializing and deserilizing json, **url-encoded key-value pairs** are used in communication. The string `username[$gt]=` is a special syntax used by the qs module (default in ExpressJS and the body-parser middleware). This syntax is the equivalent of making an JavaScript object with a single parameter called $gt mapped to no value. In essence, the request above will result into a JavaScript object that looks like ` { username: { '$gt': '' }, password: { '$gt': '' } }`, which is exactly the same one described above. Then the request would result a login bypass. 
 
-    To protects against Dollar $ injection attacks, we should implement input validation and sanitization. We should write right validators for route that checks req.params, req.body and req.query for objects and recursively scans for the $ symbol as the first property key and responds with an error if it is detected.
+    For this attack on this particular application, it is also a design problem. When authenticating user, we have lots of more secure ways to accomplish it instead of doing a query use both fields username and password.
+
+    To protects against 'Dollar $' injection attacks, we should implement input validation and sanitization. We should write right validators for route that checks req.params, req.body and req.query for objects and recursively scans for the $ symbol and responds with an error if it is detected.
 
 
 ## Progress Outline / Answer to Heilmeier questions
