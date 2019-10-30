@@ -105,7 +105,7 @@ Below are the security risks reported in the OWASP Top 10 2017 report:
 
 ## About the Web App
 
-The starting point of this web app is from [here](https://github.com/cwbuecheler/node-tutorial-2-restful-app), which is a simple nodeJS web app with a list of all users. Then to make it a functional web application, I added user authentication, user creation without duplicates, data modification, session persistent etc. The app is developed in node.js and express and connected to NonSQL database MongoDB. 
+The starting point of this web app is from [here](https://github.com/cwbuecheler/node-tutorial-2-restful-app), which is a simple nodeJS web app with a list of all users. Then to make it a functional web application, I added user authentication, user creation without duplicates, data modification, session persistent etc. The app is developed in node.js and express and connected to NoSQL database MongoDB. 
 
 The directories of the app are
 * [/public](./public) - static directories such as /images, currently including js which includes all the client interactions and css files
@@ -134,88 +134,61 @@ Admin Interface: Clicking the username of a user would display user info on the 
 
 Here I would list how to exploit these vulnerabilities on the application and also propose some solutions.
 
-1. **Injection**
-
-Here
-
-
-2. **Broken Authentication**
-
-<!-- The admin interface is accessible by anyone. -->
-
-3. **Sensitive Data Exposure**
-<!-- 
-The password is stored as plaintext in database and sent as plaintext over the nextwork requests. -->
-
-4. **XML External Entities (XXE)**
-5. **Broken Access Control**
-6. **Security Misconfiguration**
-7. **Cross-Site Scripting (XSS)**
-8. **Insecure Deserialization**
 9. **Using Components with known Vulnerabilities**
 
-Here
+    Run `npm audit`, we could see a 'npm audit security report' that lists all known vulnerabilities from the dependency tree, with the risk level, path and more specific details. It also suggests possible actions we should take to resolve the known vulnerabilities and `npm audit fix` would automatically install any compatible updates to vulnerable dependencies. 
 
-10. **Insufficient Logging & Monitoring**
+    Particularly in this application I intentionally use out-of-date components and we have `found 7 vulnerabilities (3 low, 1 moderate, 2 high, 1 critical) in 2504 scanned packages` through `npm audit`: DOS from both mongoDb and path monk>mongoDb, code injection from Morgan, 'incorrect handling of non-boolean comparisons during minification' and 'regular expression DOS' from path jade>transformers>uglify-js, 'regular expression DOS' from jade>clean-css, and 'Sandbox Bypass Leading to Arbitrary Code Execution' from jade>constantinopl.    
+    
+    To fix the vulnerability, the application should update all its packages using a simple command `npm audit fix` to update packages. If some known vulnerabilities is not fixed by update of the package sources, we should consider use other secure components (with its dependencies being also secure) to replace the insecure ones.
 
+1. **injection attack**
 
-1. Out of date dependencies
+    Normally people always talk about SQL Injection. However, Although we no longer deal with a query language in the form of a string like what we normally do with an injection attack, a [NoSQL injetion attack](https://www.owasp.org/index.php/Testing_for_NoSQL_injection) is also possible with their own operators and syntax. 
 
-npm audit 
-did a great job to 
+    In this application, when authenticating user into the system, we have a end point when doing a POST request to `/users/session`. And in this function (/routes/users.js, line 59, called by public/javascripts/global.js line 177), we get 
+    ```javascript
+    collection.findOne({ username: req.body.username, password: req.body.password })
+    ```
 
-A simple command `npm audit fix` would be able to fix them.
+    Here we assume that the username field is coming from a deserialized JSON object, manipulation of the above query is easy. Such as, if one supplies a JSON document as the input to the application, an attacker will be able to perform the login bypass:
+    ```javascript
+    {
+        "username": {"$gt": ""},
+        "password": {"$gt": ""}
+    }
+    ```
 
+    As we noted in the request end point `/users/session`, (there's no validation for username and password type to be string and also no proper sanitization. Therefore, when the JSON document is deserialized, those fields may contain malicious input like the input above. In MongoDB, the field $gt has a special meaning, which is used as the greater than comparator. As such, the username and the password from the database will be compared to the empty string "" and as a result return a positive outcome, i.e. a true statement. Then the query would return the first user in the database and the end-point login that user.
 
-**4. injection attack**
-https://www.owasp.org/index.php/Testing_for_NoSQL_injection
-Testing for NoSQL injection from OWASP
+    To exploit such vulnerability in our application, we could have the following code in the console. Then when refreshing the page, we are in the session of a user in the database.
+    ```javascript 
+    await fetch("http://localhost:3000/users/session", 
+      {"credentials":"include",
+       "headers":
+        {"accept":"application/json, text/javascript, */*; q=0.01",
+         "accept-language":"en,zh-CN;q=0.9,zh;q=0.8",
+         "cache-control":"no-cache",
+         "content-type":"application/x-www-form-urlencoded; charset=UTF-8",
+         "pragma":"no-cache",
+         "sec-fetch-mode":"cors",
+         "sec-fetch-site":"same-origin",
+         "x-requested-with":"XMLHttpRequest"},
+       "referrer":"http://localhost:3000/",
+       "referrerPolicy":"no-referrer-when-downgrade",
+       "body":"username[$gt]=&password[$gt]=",
+       "method":"POST",
+       "mode":"cors"});
+    ```
 
-https://blog.websecurify.com/2014/08/hacking-nodejs-and-mongodb.html
+    The critical part is the body sent, which is `username[$gt]=&password[$gt]=`. Here in the application, when serializing and deserilizing json, url-encoded key-value pairs are used in communication. The string username[$gt]= is a special syntax used by the qs module (default in ExpressJS and the body-parser middleware). This syntax is the equivalent of making an JavaScript object/hash with a single parameter called $gt mapped to no value. In essence, the request above will result into a JavaScript object that looks like the one illustrated bellow:
+    ```   
+    { username: { '$gt': '' }, password: { '$gt': '' } }
+    ```
+    
+    Then we are able to perform a login bypass. For this particular attack example, it is also a design problem. When authenticating user, we have lots of other ways to accomplish it instead of do a query use both username and password.
 
-because of express parser (or body parser)
-
-do
-```javascript 
-await fetch("http://localhost:3000/users/session", 
-  {"credentials":"include",
-   "headers":
-    {"accept":"application/json, text/javascript, */*; q=0.01",
-     "accept-language":"en,zh-CN;q=0.9,zh;q=0.8",
-     "cache-control":"no-cache",
-     "content-type":"application/x-www-form-urlencoded; charset=UTF-8",
-     "pragma":"no-cache",
-     "sec-fetch-mode":"cors",
-     "sec-fetch-site":"same-origin",
-     "x-requested-with":"XMLHttpRequest"},
-   "referrer":"http://localhost:3000/",
-   "referrerPolicy":"no-referrer-when-downgrade",
-   "body":"username[$gt]=&password[$gt]=",
-   "method":"POST",
-   "mode":"cors"});
-```
-
-POST /users/session
-
-after  
-req.body becomes 
-{ username: '{"$gt": ""}', password: '{"$gt": ""}' }
-
-For this particular attack example, design problem
-should not check password like such. 
-should first find the user with one username and 
-...
-
-To protects against Dollar $ injection attacks for 
-
-checks req.params, req.body and req.query for objects and recursively scans for the $ symbol as the first property key and responds with an error if it is detected.
-
- coders forget to right validators for route and this can be a huge security issue.
-
-
-in the console
-
-How to avoid
+    To protects against Dollar $ injection attacks, we should implement input validation and sanitization. We should write right validators for route that checks req.params, req.body and req.query for objects and recursively scans for the $ symbol as the first property key and responds with an error if it is detected.
 
 
 ## Progress Outline / Answer to Heilmeier questions
@@ -238,112 +211,3 @@ Leave this for later.
 ## An interesting Clickjacking vulnerability on Vanderbilt system YES
 
 This is not part of my final project but I want to also share my process of discovery here. Please visit *[clickjacking](./clickjacking)* if interested.
-
-<!-- 
-npm install
-```
-found 7 vulnerabilities (3 low, 1 moderate, 2 high, 1 critical)
-run `npm audit fix` to fix them, or `npm audit` for details
-```
-
-npm audit
-
-find npm audit then we could get the security report with the risk level, dependency specific details of path and a url of more info on the vulnerability.
-
-Also it offers specific command to update and fixxes these known vulnerabilities, which is super nice.
-
-There are 7  Denial of Service from mongodb,  Code Injection    from Morgan
-                                                                                
-                       === npm audit security report ===                        
-                                                                                
-# Run  npm install monk@7.1.1  to resolve 1 vulnerability
-SEMVER WARNING: Recommended action is a potentially breaking change
-┌───────────────┬──────────────────────────────────────────────────────────────┐
-│ High          │ Denial of Service                                            │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Package       │ mongodb                                                      │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Dependency of │ monk                                                         │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Path          │ monk > mongodb                                               │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ More info     │ https://npmjs.com/advisories/1203                            │
-└───────────────┴──────────────────────────────────────────────────────────────┘
-──────────────────────────────────────────────────────────────┘
-
-
-# Run  npm update mongodb --depth 1  to resolve 1 vulnerability
-┌───────────────┬──────────────────────────────────────────────────────────────┐
-│ High          │ Denial of Service                                            │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Package       │ mongodb                                                      │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Dependency of │ mongodb                                                      │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Path          │ mongodb                                                      │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ More info     │ https://npmjs.com/advisories/1203                            │
-└───────────────┴──────────────────────────────────────────────────────────────┘
-
-
-┌──────────
-└──────────────────────────────────────────────────────────────────────────────┘
-┌───────────────┬──────────────────────────────────────────────────────────────┐
-│ Low           │ Incorrect Handling of Non-Boolean Comparisons During         │
-│               │ Minification                                                 │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Package       │ uglify-js                                                    │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Patched in    │ >= 2.4.24                                                    │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Dependency of │ jade                                                         │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Path          │ jade > transformers > uglify-js                              │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ More info     │ https://npmjs.com/advisories/39                              │
-└───────────────┴──────────────────────────────────────────────────────────────┘
-┌───────────────┬──────────────────────────────────────────────────────────────┐
-│ Low           │ Regular Expression Denial of Service                         │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Package       │ uglify-js                                                    │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Patched in    │ >=2.6.0                                                      │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Dependency of │ jade                                                         │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Path          │ jade > transformers > uglify-js                              │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ More info     │ https://npmjs.com/advisories/48                              │
-└───────────────┴──────────────────────────────────────────────────────────────┘
-┌───────────────┬──────────────────────────────────────────────────────────────┐
-│ Critical      │ Sandbox Bypass Leading to Arbitrary Code Execution           │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Package       │ constantinople                                               │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Patched in    │ >=3.1.1                                                      │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Dependency of │ jade                                                         │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Path          │ jade > constantinople                                        │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ More info     │ https://npmjs.com/advisories/568                             │
-└───────────────┴──────────────────────────────────────────────────────────────┘
-┌───────────────┬──────────────────────────────────────────────────────────────┐
-│ Low           │ Regular Expression Denial of Service                         │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Package       │ clean-css                                                    │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Patched in    │ >=4.1.11                                                     │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Dependency of │ jade                                                         │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ Path          │ jade > clean-css                                             │
-├───────────────┼──────────────────────────────────────────────────────────────┤
-│ More info     │ https://npmjs.com/advisories/785                             │
-└───────────────┴──────────────────────────────────────────────────────────────┘
-There are  `npm audit fix` to fix 2 of them.
-
-  1 vulnerability requires semver-major dependency updates.
-  4 vulnerabilities require manual review. See the full report for details.
-
- -->
