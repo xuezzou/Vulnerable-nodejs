@@ -14,6 +14,7 @@ var db = monk('localhost:27017/nodetest2');
 var adminRouter = require('./routes/admin');
 var usersRouter = require('./routes/users');
 var loginRouter = require('./routes/index');
+var pikachuRouter = require('./routes/pikachu')
 
 var app = express();
 
@@ -43,7 +44,7 @@ app.use(function(req,res,next){
 app.use('/', adminRouter);
 app.use('/users', usersRouter);
 app.use('/', loginRouter);
-
+app.use('/', pikachuRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

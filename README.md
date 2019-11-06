@@ -39,7 +39,7 @@ Below are the security risks reported in the OWASP Top 10 2017 report:
 
 2. **Broken Authentication**
     
-    This type of attack relates to the user's identity, authentication, and session management. Some vulnerabilitoes in authentication systems can give attackers access to user accounts and even the admin account. For example, an attacker can take lists of known words against a user to form different combinations of passwords and then brute force trying all those combinations on the login system to see if there are any that work.
+    This type of attack relates to the user's identity, authentication, and session management. Some vulnerabilities in authentication systems can give attackers access to user accounts and even the admin account. For example, an attacker can take lists of known words against a user to form different combinations of passwords and then brute force trying all those combinations on the login system to see if there are any that work.
 
     Some strategies to mitigate authentication vulnerabilities are implementing weak password check, multi-factor authentication as well as avoiding deploying default credentials and limiting or delaying repeated login attempts using rate limiting.
 
@@ -186,6 +186,56 @@ Here I would list how to exploit these vulnerabilities on the application and al
     For this attack on this particular application, it is also a design problem. When authenticating user, we have lots of more secure ways to accomplish it instead of doing a query use both fields username and password.
 
     To protects against 'Dollar $' injection attacks, we should implement input validation and sanitization. We should write right validators for route that checks req.params, req.body and req.query for objects and recursively scans for the $ symbol and responds with an error if it is detected.
+
+2. Broken Authentication - 
+
+    It's obvious that the deign of the authentication is problematic. Firstly, following the path `/admin`, the admin account is accessible by everyone. Secondly, user-wise, the password management system is highly insecure since it doesn't have any kind of protection such as weak password check or even multi-factor authentication.
+
+    To mitigate, the admin account should be set securely in some other manner
+
+    admin account
+    no password check
+
+3. Sensitive Data Exposure - 
+    
+    Speaking of senstive data exposure all the field email as sensitive data
+
+    If it is unnecessary remove it from the database.
+
+4. XML External Entities
+
+**xml file injection**
+
+5. Broken Access Control - 
+
+Access control refers a system that controls access to information or functionality. Broken access controls allow attackers to bypass authorization and perform tasks as though they were privileged users such as administrators
+is also a example of broken access control
+
+Access controls can be secured by ensuring that a web application uses authorization tokens* and sets tight controls on them.
+
+
+6. Security Misconfiguration
+often the result of using default configurations or displaying excessively verbose errors
+**add unused features**
+
+
+7. Cross-Site Scripting
+
+**css**
+
+8. Insecure Deserialization
+
+???
+
+10. Insufficient Logging And Monitoring - 
+!!! Definitely
+
+
+**Broken Authentication**
+    
+    This type of attack relates to the user's identity, authentication, and session management. Some vulnerabilitoes in authentication systems can give attackers access to user accounts and even the admin account. For example, an attacker can take lists of known words against a user to form different combinations of passwords and then brute force trying all those combinations on the login system to see if there are any that work.
+
+    Some strategies to mitigate authentication vulnerabilities are implementing weak password check, multi-factor authentication as well as avoiding deploying default credentials and limiting or delaying repeated login attempts using rate limiting.
 
 
 ## Progress Outline / Answer to Heilmeier questions
