@@ -3,10 +3,10 @@ var userListData = [];
 
 // DOM Ready =============================================================
 $(document).ready(function () {
-  if (window.location.pathname === '/') {
-    userRendering();
-  } else if (window.location.pathname === '/admin') {
+  if (window.location.pathname === '/admin') {
     adminRendering();
+  } else {
+    userRendering();
   }
 });
 
@@ -24,7 +24,7 @@ function adminRendering() {
   $('.userList table tbody').on('click', 'td a.linkdeleteuser', deleteUser);
 }
 
-// More Functions for Admin Panel =============================================================
+// More Functions for Admin Panel ========================================
 
 // Fill table with data
 function populateTable() {
@@ -140,7 +140,7 @@ function deleteUser(event) {
 };
 
 
-// More Functions for User Panel =============================================================
+// More Functions for User Panel =========================================
 
 // These are actions corresponding to the user interface
 function userRendering() {
@@ -252,7 +252,7 @@ function modifyUser() {
     'gender': $('#modifyUserGender').val(),
   }
   // delete blank fields
-  Object.keys(modifyUser).forEach((key) => {(modifyUser[key] === "") && delete modifyUser[key]});
+  Object.keys(modifyUser).forEach((key) => { (modifyUser[key] === "") && delete modifyUser[key] });
   $.ajax({
     type: "PUT",
     data: modifyUser,
@@ -275,5 +275,6 @@ function modifyUser() {
       alert('Error: ' + response.msg);
     }
   });
-
 }
+
+// Functions =============================================================

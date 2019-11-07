@@ -1,22 +1,25 @@
-var createError = require('http-errors');
-var express = require('express');
-var session = require('express-session');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+let createError = require('http-errors');
+let express = require('express');
+let session = require('express-session');
+let path = require('path');
+let cookieParser = require('cookie-parser');
+let logger = require('morgan');
 
 // Database
-var mongo = require('mongodb');
-var monk = require('monk');
-var db = monk('localhost:27017/nodetest2');
+let mongo = require('mongodb');
+let monk = require('monk');
+let db = monk('localhost:27017/nodetest2');
 
 
-var adminRouter = require('./routes/admin');
-var usersRouter = require('./routes/users');
-var loginRouter = require('./routes/index');
-var pikachuRouter = require('./routes/pikachu')
+let adminRouter = require('./routes/admin');
+let usersRouter = require('./routes/users');
+let loginRouter = require('./routes/index');
+let pikachuRouter = require('./routes/pikachu');
+let orderRouter = require('./routes/order');
+// support php file exec
+let phpRouter = require('./routes/php');
 
-var app = express();
+let app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -45,6 +48,8 @@ app.use('/', adminRouter);
 app.use('/users', usersRouter);
 app.use('/', loginRouter);
 app.use('/', pikachuRouter);
+app.use('/', orderRouter);
+app.use('/', phpRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

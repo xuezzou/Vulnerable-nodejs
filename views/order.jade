@@ -1,0 +1,31 @@
+extends layout
+
+block content
+  h1= title
+  p= name
+    | ! Welcome to the secret shop 
+
+  // Wrapper
+  #wrapper
+    
+    #menu
+      h2 Our Menu
+      p Gather ye rosebuds while ye may,
+        br 
+        | Old Time is still a-flying;
+        br
+        | And this same flower that smiles today
+        br
+        | To-morrow will be dying.
+
+    #order 
+      h2 Order
+      .userList
+      form(action='/test.php', method='GET')
+        fieldset
+          input#orderItem(type='text', placeholder='Item', name='item')
+          input#orderPrice(type='text', placeholder='Price', name='price')
+          br
+          button#btnOrder Order
+
+  // /WRAPPER

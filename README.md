@@ -217,18 +217,57 @@ Access controls can be secured by ensuring that a web application uses authoriza
 6. Security Misconfiguration
 often the result of using default configurations or displaying excessively verbose errors
 **add unused features**
-
+pikachu
+secret page
 
 7. Cross-Site Scripting
 
-**css**
+**Xss**
+path parameter add script example
 
 8. Insecure Deserialization
 
 ???
 
-10. Insufficient Logging And Monitoring - 
-!!! Definitely
+10. Insufficient Logging And Monitoring 
+
+In this application, server side has almost no logging except the request made are logged by nodejs. The insufficient logging is not only a bad practice generallt, it also raises issue with 
+
+All failtures should be logged out
+
+Insufficient logging, detection, monitoring and active response
+occurs any time:
+• Auditable events, such as logins, failed logins, and high-value
+transactions are not logged.
+• Warnings and errors generate no, inadequate, or unclear log
+messages.
+• Logs of applications and APIs are not monitored for suspicious
+activity.
+• Logs are only stored locally.
+• Appropriate alerting thresholds and response escalation
+processes are not in place or effective.
+• Penetration testing and scans by DAST tools (such as OWASP
+ZAP) do not trigger alerts.
+• The application is unable to detect, escalate, or alert for active
+attacks in real time or near real time.
+You are vulnerable to information leakage if you make logging
+and alerting events visible to a user or an attacker (see A3:2017-
+Sensitive Information Exposure).
+
+specificallt 
+```jaavscript
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+  next(createError(404));
+});
+```
+in app.js line 49 - 52
+
+The lack of monitoring should be concerns
+
+Generally, insufficient logging and 
+a bad practice.
+
 
 
 **Broken Authentication**
