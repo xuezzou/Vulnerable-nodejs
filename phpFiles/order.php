@@ -5,7 +5,7 @@ $xm = <<<XML
 <!ENTITY own SYSTEM "file:///etc/passwd" >]>
 <item>
 	<name>&own;</name>
-	<price>0</price>
+	<price>$argv[2]</price>
 </item>
 XML;
 
@@ -15,5 +15,17 @@ $dom->loadXML($xm, LIBXML_NOENT | LIBXML_DTDLOAD);
 $data = simplexml_import_dom($dom);
 $name = $data->name; # load item name
 $price = $data->price; # load item price
-echo "You have bought item '$name' with price $$price.";
+echo "<h2>You have ordered: $name,</h2><p> with price: $$price.</p>";
 ?>
+
+<html>
+<body>
+<style>
+    body {
+        padding: 30px;
+        font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+    }
+</style>
+
+</body>
+</html>

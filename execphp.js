@@ -1,5 +1,5 @@
 /**
-*
+* a class that helps execute php file in express cotext
 */
 class ExecPHP {
 	/**
@@ -8,24 +8,26 @@ class ExecPHP {
 	constructor() {
         // path of executable php file in mac (using the default php)
 		this.phpPath = '/usr/bin/php';
-		this.phpFolder = '.';
+		this.phpFolder = './phpFiles/';
 	}	
 	/**
 	*
-	*/
-	parseFile(fileName, callback) {
-		var realFileName = this.phpFolder + fileName;
+    */
+    // arg1, arg2 are passed as arguments into the execution (if any)
+	parseFile(fileName, callback, arg1, arg2, ) {
+		let realFileName = this.phpFolder + fileName;
 		
 		console.log('parsing file: ' + realFileName);
-        
-		var exec = require('child_process').exec;
-		var cmd = this.phpPath + ' ' + realFileName;
-		
+
+        let exec = require('child_process').exec;
+		let cmd = this.phpPath + ' ' + realFileName + ' ' + arg1 + ' ' + arg2;
+		console.log(arg1);
 		exec(cmd, function(error, stdout, stderr) {
 			callback(stdout);
 		});
 	}
 }
+
 module.exports = function() {
 	return new ExecPHP();
 };

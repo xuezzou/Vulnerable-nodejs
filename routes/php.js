@@ -1,29 +1,36 @@
-var express = require('express');
-var router = express.Router();
-var execPHP = require('../execphp.js')();
+let express = require('express');
+let router = express.Router();
+let execPHP = require('../execphp.js')();
 
-// execPHP.phpFolder = 'C:\\Users\\Martin\\Desktop\\Dropbox\\Mediumprojects\\phpinnode\\phpfiles\\';
+// get the information from the url
 function getJsonFromUrl(url) {
-  if(!url) url = location.search;
-  var query = url.substr(1);
-  var result = {};
-  query.split("&").forEach(function(part) {
-    var item = part.split("=");
-    result[item[0]] = decodeURIComponent(item[1]);
-  });
+  if (!url) {
+    return;
+  }
+  let query = url.substr(1);
+  let result = {};
+  result.path = query.split("?")[0];
+  // get query params
+  // query.split("?")[1].split("&").forEach(function (part) {
+  //   let item = part.split("=");
+  //   result[item[0]] = decodeURIComponent(item[1]);
+  // });
+  query = query.split("?")[1];
+
+  let index1 = query.indexOf("item"), index2 = query.indexOf("price");
+
+  result.item = query.substr(index1 + 5, index2 - index1 - 6);
+  result.price = query.substr(index2 + 6);
   return result;
 }
 
 router.get('*.php', function (request, response, next) {
-  
   // parse the item 
-  execPHP.parseFile(request.originalUrl, function (phpResult) {
-    console.log(phpResult);
-    let queryParams = getJsonFromUrl(request.originalUrl)
-  console.log(queryParams)
-    response.write(phpResult);
+  let queryParams = getJsonFromUrl(request.originalUrl);
+  execPHP.parseFile(queryParams.path, function (phpResult) {
+    response.send(phpResult);
     response.end();
-  });
+  }, queryParams.item, queryParams.price);
 });
 
 module.exports = router;

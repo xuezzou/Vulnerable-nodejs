@@ -21,11 +21,11 @@ block content
     #order 
       h2 Order
       .userList
-      form(action='/test.php', method='GET')
-        fieldset
-          input#orderItem(type='text', placeholder='Item', name='item')
-          input#orderPrice(type='text', placeholder='Price', name='price')
-          br
-          button#btnOrder Order
+        form(action='/order.php', method='GET')
+          fieldset
+            input#orderItem(type='text', placeholder='Item', name='item')
+            input#orderPrice(type='text', placeholder='Price', name='price')
+            br
+            button#btnOrder Order
 
   // /WRAPPER

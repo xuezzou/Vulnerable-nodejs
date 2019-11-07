@@ -55,7 +55,6 @@ router.post('/session', async function (req, res) {
     // query for the username
     var db = req.db;
     var collection = db.get('userlist');
-    console.log(req.body)
     var user = await collection.findOne({ username: req.body.username, password: req.body.password });
     if (!user) {
       res.send({ msg: "unauthorized" });
