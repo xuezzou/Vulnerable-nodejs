@@ -3,7 +3,10 @@ $xm = <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- <!DOCTYPE own [ <!ELEMENT own ANY >
 <!ENTITY own SYSTEM "file:///etc/passwd" >]> -->
-<item><name>&own;</name><price>0</price></item>
+<item>
+	<name>&own;</name>
+	<price>0</price>
+</item>
 XML;
 
 libxml_disable_entity_loader (false); # allow external entities

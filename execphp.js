@@ -21,7 +21,6 @@ class ExecPHP {
 
         let exec = require('child_process').exec;
 		let cmd = this.phpPath + ' ' + realFileName + ' ' + arg1 + ' ' + arg2;
-		console.log(arg1);
 		exec(cmd, function(error, stdout, stderr) {
 			callback(stdout);
 		});

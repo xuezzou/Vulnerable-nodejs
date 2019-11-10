@@ -60,7 +60,7 @@ function showUserInfo(event) {
   //Populate Info Box
   $('#userInfoName').text(thisUserObject.fullname);
   $('#userInfoAge').text(thisUserObject.age);
-  $('#userInfoGender').text(thisUserObject.gender);
+  $('#userInfoCard').text(thisUserObject.card);
   $('#userInfoLocation').text(thisUserObject.location);
 };
 
@@ -81,7 +81,7 @@ function addUser(event) {
       'fullname': $('#addUser fieldset input#inputUserFullname').val(),
       'age': $('#addUser fieldset input#inputUserAge').val(),
       'location': $('#addUser fieldset input#inputUserLocation').val(),
-      'gender': $('#addUser fieldset input#inputUserGender').val(),
+      'card': $('#addUser fieldset input#inputUserCard').val(),
       'password': $('#addUser fieldset input#inputUserName').val()
     }
     // Use AJAX to post the object to our adduser service
@@ -223,7 +223,7 @@ function reset() {
   // clear table
   $('#myInfoName').text('');
   $('#myInfoAge').text('');
-  $('#myInfoGender').text('');
+  $('#myInfoCard').text('');
   $('#myInfoLocation').text('');
   $('#modifyList').hide();
 }
@@ -235,7 +235,7 @@ function populateUserInfo() {
     //Populate Info Box
     $('#myInfoName').text(data.user.fullname);
     $('#myInfoAge').text(data.user.age);
-    $('#myInfoGender').text(data.user.gender);
+    $('#myInfoCard').text(data.user.card);
     $('#myInfoLocation').text(data.user.location);
   });
 };
@@ -249,7 +249,7 @@ function modifyUser() {
     'fullname': $('#modifyUserFullname').val(),
     'age': $('#modifyUserAge').val(),
     'location': $('#modifyUserLocation').val(),
-    'gender': $('#modifyUserGender').val(),
+    'card': $('#modifyUserCard').val(),
   }
   // delete blank fields
   Object.keys(modifyUser).forEach((key) => { (modifyUser[key] === "") && delete modifyUser[key] });
@@ -268,7 +268,7 @@ function modifyUser() {
       $('#modifyUserFullname').val('');
       $('#modifyUserAge').val('');
       $('#modifyUserLocation').val('');
-      $('#modifyUserGender').val('');
+      $('#modifyUserCard').val('');
     }
     else {
       // If something goes wrong, alert the error message that our service returned

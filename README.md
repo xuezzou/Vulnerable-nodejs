@@ -187,26 +187,29 @@ Here I would list how to exploit these vulnerabilities on the application and al
 
     To protects against 'Dollar $' injection attacks, we should implement input validation and sanitization. We should write right validators for route that checks req.params, req.body and req.query for objects and recursively scans for the $ symbol and responds with an error if it is detected.
 
-2. Broken Authentication - 
+2. Broken Authentication
 
-    It's obvious that the deign of the authentication is problematic. Firstly, following the path `/admin`, the admin account is accessible by everyone. Secondly, user-wise, the password management system is highly insecure since it doesn't have any kind of protection such as weak password check or even multi-factor authentication.
+    It's obvious that the deign of the authentication is problematic. Firstly, following the path `/admin`, the admin account is easily accessible by everyone. Secondly, user-wise, the password management system is highly insecure since it doesn't have any kind of protection such as weak password check or multi-factor authentication. Even worse, by default, the password of every user is the same as their username. The default credentials expose the system to high security risk.
 
-    To mitigate, the admin account should be set securely in some other manner
+    To mitigate, the admin account should be set securely in some other manner. For example, we can use an admin account with multi-factor authentication. In the userface, we should integrate weak password check and avoid deploying default credentials.
 
-    admin account
-    no password check
-
-3. Sensitive Data Exposure - 
+3. Sensitive Data Exposure
     
-    Speaking of senstive data exposure all the field email as sensitive data
+    The system is also highly risky against sensitive data exposure. Firstly and most importantly, the password is stored as plaintext in the database. If eavesdropping happens in the network communication between the submission form and the server, the information is easily accessible by attackers. To help protect the system, password should be computed and stored by a strong one-way hashing algorithm with dynamic 'salt'. 
 
-    If it is unnecessary remove it from the database.
+    Moreover, on line 33 of 'views/login.jade', we have, `input#loginPassword(type='text', placeholder='Password')`. Here when one enters the password in the login page, the characters are displayed as plaintext on the screen, which should be hidden behind symbols such as asterisks against peeking. To easily mitigate this, we should have `type='password'` instead.
+
+    Even worse, we have a field credit card required when register. The information is firstly unnecessary and secondly too sensitive. Credit card information should be removed since it is not used and storing highly personal information such as credit card has too much risks and complications.
 
 4. XML External Entities
 
-**xml file injection**
+Since php file
+requires xml data in 
+express parse body into json obejct
 
-5. Broken Access Control - 
+
+
+*5. Broken Access Control*
 
 Access control refers a system that controls access to information or functionality. Broken access controls allow attackers to bypass authorization and perform tasks as though they were privileged users such as administrators
 is also a example of broken access control
@@ -215,25 +218,38 @@ Access controls can be secured by ensuring that a web application uses authoriza
 
 
 6. Security Misconfiguration
+
 often the result of using default configurations or displaying excessively verbose errors
 **add unused features**
 pikachu
 secret page
+When it is put into production, such unused features should be removed and in such way we could reduce our attack surface as much as possible.
 
-7. Cross-Site Scripting
+*7. Cross-Site Scripting*
 
 **Xss**
 path parameter add script example
 
-8. Insecure Deserialization
+*8. Insecure Deserialization*
 
-???
+
+---
 
 10. Insufficient Logging And Monitoring 
 
-In this application, server side has almost no logging except the request made are logged by nodejs. The insufficient logging is not only a bad practice generallt, it also raises issue with 
+In this application, server side has almost no logging except the request and its corresponding response status code made from front-end to express. The insufficient logging is not only a bad software engineering practice in general, it also raises security.
 
-All failtures should be logged out
+Ensure all login, access control failures, and server-side input validation failures can be logged with sufficient user context to identify suspicious or malicious accounts, and held for sufficient time to allow delayed forensic analysis.
+
+Ensure that logs are generated in a format that can be easily consumed by a centralized log management solutions.
+
+Ensure high-value transactions have an audit trail with integrity controls to prevent tampering or deletion, such as append-only database tables or similar.
+Establish effective monitoring and alerting such that suspicious activities are detected and responded to in a timely fashion.
+
+Establish or adopt an incident response and recovery plan.
+
+
+To help build better logging, all failtures should be logged out.
 
 Insufficient logging, detection, monitoring and active response
 occurs any time:
@@ -254,14 +270,7 @@ You are vulnerable to information leakage if you make logging
 and alerting events visible to a user or an attacker (see A3:2017-
 Sensitive Information Exposure).
 
-specificallt 
-```jaavscript
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
-});
-```
-in app.js line 49 - 52
+
 
 The lack of monitoring should be concerns
 
@@ -269,12 +278,6 @@ Generally, insufficient logging and
 a bad practice.
 
 
-
-**Broken Authentication**
-    
-    This type of attack relates to the user's identity, authentication, and session management. Some vulnerabilitoes in authentication systems can give attackers access to user accounts and even the admin account. For example, an attacker can take lists of known words against a user to form different combinations of passwords and then brute force trying all those combinations on the login system to see if there are any that work.
-
-    Some strategies to mitigate authentication vulnerabilities are implementing weak password check, multi-factor authentication as well as avoiding deploying default credentials and limiting or delaying repeated login attempts using rate limiting.
 
 
 ## Progress Outline / Answer to Heilmeier questions

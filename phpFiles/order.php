@@ -1,10 +1,18 @@
 <?php
-$xm = <<<XML
+$malicious = <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE own [ <!ELEMENT own ANY >
 <!ENTITY own SYSTEM "file:///etc/passwd" >]>
 <item>
 	<name>&own;</name>
+	<price>$argv[2]</price>
+</item>
+XML;
+
+$xm = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<item>
+	<name>$argv[1]</name>
 	<price>$argv[2]</price>
 </item>
 XML;
