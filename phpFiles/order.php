@@ -19,9 +19,9 @@ $xm = <<<XML
 XML;
 
 libxml_disable_entity_loader (false); # allow external entities
-$dom = new DOMDocument();
-$dom->loadXML($xm, LIBXML_NOENT | LIBXML_DTDLOAD);
-$data = simplexml_import_dom($dom);
+$dom = new DOMDocument(); # create XML class
+$dom->loadXML($xm, LIBXML_NOENT | LIBXML_DTDLOAD); # load xml data into dom 
+$data = simplexml_import_dom($dom); # parse into XML
 $name = $data->name; # load item name
 $price = $data->price; # load item price
 echo "<h2>You have ordered: $name,</h2><p> with price: $$price.</p>";

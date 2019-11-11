@@ -203,17 +203,17 @@ Here I would list how to exploit these vulnerabilities on the application and al
 
 4. **XML External Entities (XXE Injection)**
 
-    Since express mostly deals with json format in communication, to include data format as XML in the application, we have script 'execphp.js' and 'php.js' that deals with php file execution from command line. Here's the flow for how order.php is executed. First, in the page '/order', which is rendered by 'views/order.jade', we have a submission form with `action='/order.php', method='GET'` on line 24. When we submit our ordering request, we would visit `order.php` file, which reads in a xml formatted variable.
+    Since express mostly deals with json format in communication, to include data format XML in the application, we have script 'execphp.js' and 'php.js' that deals with php file execution from command line. Here's the flow for how file 'phpFiles/order.php' is executed. First, in the page '/order', which is rendered by 'views/order.jade', we have a submission form with `action='/order.php', method='GET'` on line 24. When we submit our ordering request, we would visit 'phpFiles/order.php' file, which reads in a xml formatted variable, and display corresponding order information on the webpage. Following is line 21 - 27 of 'order.php' file,
     ```php
     libxml_disable_entity_loader (false); # allow external entities
-    $dom = new DOMDocument();
-    $dom->loadXML($xm, LIBXML_NOENT | LIBXML_DTDLOAD);
-    $data = simplexml_import_dom($dom);
+    $dom = new DOMDocument(); # create XML class
+    $dom->loadXML($xm, LIBXML_NOENT | LIBXML_DTDLOAD); # load xml data into dom 
+    $data = simplexml_import_dom($dom); # parse into XML
     $name = $data->name; # load item name
     $price = $data->price; # load item price
     echo "<h2>You have ordered: $name,</h2><p> with price: $$price.</p>";
     ```
-    Here's the format of the XML variable.
+    Here's the format of a expected XML variable on line 12-19 of 'phpFiles/order.php'.
     ```php
     $name = urldecode($argv[1]);
     $xm = <<<XML
@@ -224,21 +224,21 @@ Here I would list how to exploit these vulnerabilities on the application and al
       </item>
     XML;
     ```
-    If an external entity is allowed
+    If an external entity is allowed, malicious data such as the following from line 2 - 10 of 'phpFiles/order.php' would allow attackers to interfere with an application's processing of XML data,
+    ```php
+    $malicious = <<<XML
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE own [ <!ELEMENT own ANY >
+    <!ENTITY own SYSTEM "file:///etc/passwd" >]>
+    <item>
+      <name>&own;</name>
+      <price>$argv[2]</price>
+    </item>
+    XML;
+    ```
+    Here the Document Type Declaration is imported from the external URL `file:///etc/passw` into the XML document by using the SYSTEM keyword. If the data is parsed into the dom, since the external entities are allowed, as a result, the attacker is able to retrieve the '/etc/passwd' file from the server filesystem.
 
-    php.js
-
-    go to url order.php arguments are passed
-
-
-    Since php file
-    requires xml data in 
-    express parse body into json obejct
-    made php files execution in the program
-
----
-
-    To mitigate XEE attacks, the easiest is to other format such as JSON, or at the very least to configure XML parser properly and disable the use of external entities in an XML application. `libxml_disable_entity_loader (true)` would disallow external entities in the above example.
+    XXE attacks like the example above often allows an attacker to view files on the application server filesystem, and to interact with any backend or external systems that the application itself can access. To mitigate XEE attacks, the easiest is to other format such as JSON, or at the very least to configure XML parser properly and disable the use of external entities in an XML application. `libxml_disable_entity_loader (true)` would disallow external entities in the above example.
 
 1. **Command Line Injection Attack**
     
