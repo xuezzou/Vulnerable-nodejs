@@ -20,7 +20,6 @@ class ExecPHP {
 		console.log('parsing file: ' + realFileName);
         let exec = require('child_process').exec;
         let cmd = this.phpPath + ' ' + realFileName + ' ' + arg1 + ' ' + arg2;
-        console.log(cmd);
 		exec(cmd, function(error, stdout, stderr) {
 			callback(stdout);
 		});

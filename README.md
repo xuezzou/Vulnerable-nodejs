@@ -140,7 +140,7 @@ Here I would list how to exploit these vulnerabilities on the application and al
 
     Particularly in this application I intentionally use out-of-date components and we have `found 7 vulnerabilities (3 low, 1 moderate, 2 high, 1 critical) in 2504 scanned packages` through `npm audit`: DOS from both mongoDb and path monk>mongoDb, code injection from Morgan, 'incorrect handling of non-boolean comparisons during minification' and 'regular expression DOS' from path jade>transformers>uglify-js, 'regular expression DOS' from jade>clean-css, and 'Sandbox Bypass Leading to Arbitrary Code Execution' from jade>constantinopl.    
     
-    To fix the vulnerability, the application should update all its packages using a simple command `npm audit fix` to update packages. If some known vulnerabilities is not fixed by update of the package sources, we should consider use other secure components (with its dependencies being also secure) to replace the insecure ones.
+    To fix the vulnerability, the application should update all its packages using a simple command `npm audit fix` to update packages. If some known vulnerabilities is not fixed by update of the package sources, we should consider use other secure components (with its dependencies being also secure) to replace the insecure ones. We should also make an ongoing plan for monitoring, triaging, and applying updates or configuration changes for the application. 
 
 1. **NoSql injection attack**
 
@@ -187,13 +187,13 @@ Here I would list how to exploit these vulnerabilities on the application and al
 
     To protects against 'Dollar $' injection attacks, we should implement input validation and sanitization. We should write right validators for route that checks req.params, req.body and req.query for objects and recursively scans for the $ symbol and responds with an error if it is detected.
 
-2. Broken Authentication
+2. **Broken Authentication**
 
     It's obvious that the deign of the authentication is problematic. Firstly, following the path `/admin`, the admin account is easily accessible by everyone. Secondly, user-wise, the password management system is highly insecure since it doesn't have any kind of protection such as weak password check or multi-factor authentication. Even worse, by default, the password of every user is the same as their username. The default credentials expose the system to high security risk.
 
     To mitigate, the admin account should be set securely in some other manner. For example, we can use an admin account with multi-factor authentication. In the userface, we should integrate weak password check and avoid deploying default credentials.
 
-3. Sensitive Data Exposure
+3. **Sensitive Data Exposure**
     
     The system is also highly risky against sensitive data exposure. Firstly and most importantly, the password is stored as plaintext in the database. If eavesdropping happens in the network communication between the submission form and the server, the information is easily accessible by attackers. To help protect the system, password should be computed and stored by a strong one-way hashing algorithm with dynamic 'salt'. 
 
@@ -201,23 +201,58 @@ Here I would list how to exploit these vulnerabilities on the application and al
 
     Even worse, we have a field credit card required when register. The information is firstly unnecessary and secondly too sensitive. Credit card information should be removed since it is not used and storing highly personal information such as credit card has too much risks and complications.
 
-4. XML External Entities
+4. **XML External Entities (XXE Injection)**
+
+    Since express mostly deals with json format in communication, to include data format as XML in the application, we have script 'execphp.js' and 'php.js' that deals with php file execution from command line. Here's the flow for how order.php is executed. First, in the page '/order', which is rendered by 'views/order.jade', we have a submission form with `action='/order.php', method='GET'` on line 24. When we submit our ordering request, we would visit `order.php` file, which reads in a xml formatted variable.
+    ```php
+    libxml_disable_entity_loader (false); # allow external entities
+    $dom = new DOMDocument();
+    $dom->loadXML($xm, LIBXML_NOENT | LIBXML_DTDLOAD);
+    $data = simplexml_import_dom($dom);
+    $name = $data->name; # load item name
+    $price = $data->price; # load item price
+    echo "<h2>You have ordered: $name,</h2><p> with price: $$price.</p>";
+    ```
+    Here's the format of the XML variable.
+    ```php
+    $name = urldecode($argv[1]);
+    $xm = <<<XML
+    <?xml version="1.0" encoding="UTF-8"?>
+    <item>
+        <name>$name</name>
+        <price>$argv[2]</price>
+      </item>
+    XML;
+    ```
+    If an external entity is allowed
+
+    php.js
+
+    go to url order.php arguments are passed
+
 
     Since php file
     requires xml data in 
     express parse body into json obejct
     made php files execution in the program
 
+---
+
+    To mitigate XEE attacks, the easiest is to other format such as JSON, or at the very least to configure XML parser properly and disable the use of external entities in an XML application. `libxml_disable_entity_loader (true)` would disallow external entities in the above example.
+
 1. **Command Line Injection Attack**
     
-    http://localhost:3000/order.php?item=myself&ls%20/;&price=1
+    Since the php application runs through command line execution using the javascript 'exec()' function on line 24 of 'execphp.js' file, a command line injection attack is possible if we inject command line code in the path variable. For example, if we type http://localhost:3000/order.php?item=cookie&ls%20/;&price=1, the query parameter would turns into `cookie&ls ~;` after url decoding. On line 22 of 'execphp.js', the query parameter is concatenated as part of command line execution on line 24. When we run this malicious request, we have,
+    ```
+    /usr/bin/php ./phpFiles/order.php cookie&ls /; 1
+    ```
+    which would have `ls /;` executed as part of command line after executing php file. Then all files of the attacked system are listed on the webpage. To mitigate this, we should do proper sanitization with input into an interpreter, and basically better avoid using javscript's exec function. 
 
-
-5. Broken Access Control
+5. **Broken Access Control**
 
     Access control refers a system that controls access to information or functionality. In this application, the broken access controls allow anyone to bypass authorization by following url path `/admin` and perform tasks as though they were privileged as administrators. Moreover, anyone could also perform privileged task by typing into the request into url without proper authorization, like if we perform a DELETE request on url 'http://localhost:3000/users/deleteuser/{id}'.
 
-    To help establish a proper access control, we should first deny access to functionality by default, and then use access control lists and role-based authentication mechanisms to give access based on different roles. Moreover, we could log access control failures, alert admins when appropriate (e.g. repeated failures), and also rate limit API and controller access to minimize the harm from automated attack tooling.
+    To help establish a proper access control, we should first deny access to functionality by default, and then use access control lists and role-based authentication mechanisms to give access based on different roles. Moreover, we could log access control failures, alert admins when appropriate (e.g. repeated failures), and also rate limit API and controller access to minimize the harm from automated attack tooling. 
 
 6. **Security Misconfiguration**
 
@@ -228,24 +263,16 @@ Here I would list how to exploit these vulnerabilities on the application and al
     To help configure in a more secure way, we should use *the principle of least privilege*: Everything off by default. Disable administration interfaces, disable debugging, disable use of default accounts/passwords. Configure server to prevent unauthorized access, directory listing, etc, and also Consider running scans and doing audits periodically to help detect future misconfiguration or missing patches.
 
 7. **Cross-Site Scripting**
+    
+    When visiting a webpage such as 'http://localhost:3000/order?name=Xue', the query parameter 'name' would be passed into line 6 in 'routes/order.js'.and then passed down into the 'name' variable on line 5 of 'views/order.jade'. Then the name from the path variable would display as a part of a p tag html element. Since the input is not sanitized, one may pass anything and render the unauthorized resource in the page. For example, we could have a malicious link like 'http://localhost:3000/order?name=Follow%20our%20instagram%20page%20http://malicious.com', and after string concatenation it would be displayed as 'Follow our instagram page http://malicious.com! Welcome to the secret shop'. As a result, the untrusted content is rendered from a trusted source.
 
-In file 
-http://localhost:3000/order?name=Xue
-example 
-http://localhost:3000/order?name=another%20secret%20shop%20visit:%20%20http://malicious.com
-render unauthorized content from a trusted source
-
-To prevent XSS, we should 
-
-path parameter add script example
-validating and/or sanitizing user-generated content
-and also ensure the origin of the request 
+    Preventing XSS requires separation of untrusted data from active browser content. Mitigation strategies include escaping untrusted HTTP requests as well as "whitelist" validating and/or sanitizing user-generated content (length, characters, format, and business rules etc. on that data before accepting the input). In the particular example above, the query parameter should not be put into part of content without validation/sanitization.
 
 8. *Insecure Deserialization*
 
-    Since deserilization is not explicitly used in the site, we won't discuss and demonstrate the vulnerability.
+    Data which is untrusted cannot be trusted to be well formed. Malformed data or unexpected data could be used to abuse application logic, deny service, or execute arbitrary code, when deserialized. Since deserilization is not explicitly used in the site, we won't discuss and demonstrate the vulnerability. The mongoDB database injection could be an example of the deserialization of json object from input.
 
-10. Insufficient Logging And Monitoring 
+10. **Insufficient Logging And Monitoring**
 
     In this application, server side has almost no logging except using morgan, a HTTP request logger middleware for node.js. The insufficient logging is not only a bad software engineering practice in general, it also raises security concern. For example, if the application breaks, as developers, we won't even know what specific part might cause it. The lack of monitoring, logging or alerting would lead to a far worse situation.
 
