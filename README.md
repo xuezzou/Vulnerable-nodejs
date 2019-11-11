@@ -119,7 +119,7 @@ The directories of the app are
 
 To connect to local mongoDB, for example, I have `mongod --dbpath ~/Documents/mongo/db`.
 
-To run the code, git clone and first run `npm install` to install all all required dependencies. Then, run `npm run live` to run the node server with nodemon and go to `http://localhost:3000` for user interface and `http://localhost:3000/admin` for admin interface.
+To run the code, git clone and first run `npm install` to install all all required dependencies. Then, run `npm run live` to run the node server with nodemon and go to 'http://localhost:3000' for user interface and 'http://localhost:3000/admin' for admin interface.
 
 Here are some sample illustrations. Login Interface and user interface. Modifying corresponding field in the lower right boxes would update the database.
 
@@ -128,6 +128,10 @@ Here are some sample illustrations. Login Interface and user interface. Modifyin
 Admin Interface: Clicking the username of a user would display user info on the left box
 
 <img src="./illustrations/admin.png" width="54%" />
+
+In addition, page 
+'http://localhost:3000/order?name={name}' would display an ordering interface. After submission, one would visit, for example, 
+'http://localhost:3000/order.php?item=job%20offer&price=1' which displays ordering information. A secret unused page is at 'http://localhost:3000/pikachu'.
 
 
 ## Vulnerabilities of the Web App
@@ -270,7 +274,7 @@ Here I would list how to exploit these vulnerabilities on the application and al
 
 8. *Insecure Deserialization*
 
-    Data which is untrusted cannot be trusted to be well formed. Malformed data or unexpected data could be used to abuse application logic, deny service, or execute arbitrary code, when deserialized. Since deserilization is not explicitly used in the site, we won't discuss and demonstrate the vulnerability. The mongoDB database injection could be an example of the deserialization of json object from input.
+    Data which is untrusted cannot be trusted to be well formed. Malformed data or unexpected data could be used to abuse application logic, deny service, or execute arbitrary code, when deserialized. Since deserilization is not explicitly used in the site, we won't discuss and demonstrate the vulnerability. The mongoDB database injection could be an example of a insecure deserialization of json object from input.
 
 10. **Insufficient Logging And Monitoring**
 
