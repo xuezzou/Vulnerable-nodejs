@@ -9,10 +9,11 @@ $malicious = <<<XML
 </item>
 XML;
 
+$name = urldecode($argv[1]);
 $xm = <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <item>
-	<name>$argv[1]</name>
+	<name>$name</name>
 	<price>$argv[2]</price>
 </item>
 XML;

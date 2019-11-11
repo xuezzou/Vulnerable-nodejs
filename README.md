@@ -142,7 +142,7 @@ Here I would list how to exploit these vulnerabilities on the application and al
     
     To fix the vulnerability, the application should update all its packages using a simple command `npm audit fix` to update packages. If some known vulnerabilities is not fixed by update of the package sources, we should consider use other secure components (with its dependencies being also secure) to replace the insecure ones.
 
-1. **injection attack**
+1. **NoSql injection attack**
 
     Normally people talk about SQL Injection. However, although we no longer deal with a query language in the form of a string, a [NoSQL injetion attack](https://www.owasp.org/index.php/Testing_for_NoSQL_injection) is also possible with their own operators and syntax. 
 
@@ -203,81 +203,55 @@ Here I would list how to exploit these vulnerabilities on the application and al
 
 4. XML External Entities
 
-Since php file
-requires xml data in 
-express parse body into json obejct
+    Since php file
+    requires xml data in 
+    express parse body into json obejct
+    made php files execution in the program
+
+1. **Command Line Injection Attack**
+    
+    http://localhost:3000/order.php?item=myself&ls%20/;&price=1
 
 
+5. Broken Access Control
 
-*5. Broken Access Control*
+    Access control refers a system that controls access to information or functionality. In this application, the broken access controls allow anyone to bypass authorization by following url path `/admin` and perform tasks as though they were privileged as administrators. Moreover, anyone could also perform privileged task by typing into the request into url without proper authorization, like if we perform a DELETE request on url 'http://localhost:3000/users/deleteuser/{id}'.
 
-Access control refers a system that controls access to information or functionality. Broken access controls allow attackers to bypass authorization and perform tasks as though they were privileged users such as administrators
-is also a example of broken access control
+    To help establish a proper access control, we should first deny access to functionality by default, and then use access control lists and role-based authentication mechanisms to give access based on different roles. Moreover, we could log access control failures, alert admins when appropriate (e.g. repeated failures), and also rate limit API and controller access to minimize the harm from automated attack tooling.
 
-Access controls can be secured by ensuring that a web application uses authorization tokens* and sets tight controls on them.
+6. **Security Misconfiguration**
 
+    Security misconfiguration is often the result of using default configurations or displaying excessively verbose errors. Firstly, all files in `public` directory are available by typing into url, as a result of line 39 of app.js `app.use(express.static(path.join(__dirname, 'public')));` For example, by following http://localhost:3000/javascripts/global.js, the logics of all implementation and functionalities are exposed.
 
-6. Security Misconfiguration
+    Moreover, speaking of the case of unused page, by following a secret path `'/pikachu'`, one would find a secret unused page that prisoned a Pikachu and Squirtle. When it is put into production, such unused features should be removed such that we could reduce our attack surface as much as possible.
 
-often the result of using default configurations or displaying excessively verbose errors
-**add unused features**
-pikachu
-secret page
-When it is put into production, such unused features should be removed and in such way we could reduce our attack surface as much as possible.
+    To help configure in a more secure way, we should use *the principle of least privilege*: Everything off by default. Disable administration interfaces, disable debugging, disable use of default accounts/passwords. Configure server to prevent unauthorized access, directory listing, etc, and also Consider running scans and doing audits periodically to help detect future misconfiguration or missing patches.
 
-*7. Cross-Site Scripting*
+7. **Cross-Site Scripting**
 
-**Xss**
+In file 
+http://localhost:3000/order?name=Xue
+example 
+http://localhost:3000/order?name=another%20secret%20shop%20visit:%20%20http://malicious.com
+render unauthorized content from a trusted source
+
+To prevent XSS, we should 
+
 path parameter add script example
+validating and/or sanitizing user-generated content
+and also ensure the origin of the request 
 
-*8. Insecure Deserialization*
+8. *Insecure Deserialization*
 
-
----
+    Since deserilization is not explicitly used in the site, we won't discuss and demonstrate the vulnerability.
 
 10. Insufficient Logging And Monitoring 
 
-In this application, server side has almost no logging except the request and its corresponding response status code made from front-end to express. The insufficient logging is not only a bad software engineering practice in general, it also raises security.
+    In this application, server side has almost no logging except using morgan, a HTTP request logger middleware for node.js. The insufficient logging is not only a bad software engineering practice in general, it also raises security concern. For example, if the application breaks, as developers, we won't even know what specific part might cause it. The lack of monitoring, logging or alerting would lead to a far worse situation.
 
-Ensure all login, access control failures, and server-side input validation failures can be logged with sufficient user context to identify suspicious or malicious accounts, and held for sufficient time to allow delayed forensic analysis.
+    To help build better logging, all failures should be logged out. Firstly, we should ensure all login, access control failures, and server-side input validation failures can be logged with sufficient user context to identify suspicious or malicious accounts, and held for sufficient time to allow delayed forensic analysis. Secondly, we should ensure that logs are generated in a format that can be easily consumed by a centralized log management solutions. Thirdly, ensure high-value transactions have an audit trail with integrity controls to prevent tampering or deletion, such as append-only database tables or similar.
 
-Ensure that logs are generated in a format that can be easily consumed by a centralized log management solutions.
-
-Ensure high-value transactions have an audit trail with integrity controls to prevent tampering or deletion, such as append-only database tables or similar.
-Establish effective monitoring and alerting such that suspicious activities are detected and responded to in a timely fashion.
-
-Establish or adopt an incident response and recovery plan.
-
-
-To help build better logging, all failtures should be logged out.
-
-Insufficient logging, detection, monitoring and active response
-occurs any time:
-• Auditable events, such as logins, failed logins, and high-value
-transactions are not logged.
-• Warnings and errors generate no, inadequate, or unclear log
-messages.
-• Logs of applications and APIs are not monitored for suspicious
-activity.
-• Logs are only stored locally.
-• Appropriate alerting thresholds and response escalation
-processes are not in place or effective.
-• Penetration testing and scans by DAST tools (such as OWASP
-ZAP) do not trigger alerts.
-• The application is unable to detect, escalate, or alert for active
-attacks in real time or near real time.
-You are vulnerable to information leakage if you make logging
-and alerting events visible to a user or an attacker (see A3:2017-
-Sensitive Information Exposure).
-
-
-
-The lack of monitoring should be concerns
-
-Generally, insufficient logging and 
-a bad practice.
-
-
+    Last but not least, we should establish effective monitoring and alerting such that suspicious activities are detected and responded to in a timely fashion, and establish or adopt an incident response and recovery plan.
 
 
 ## Progress Outline / Answer to Heilmeier questions

@@ -18,9 +18,8 @@ function getJsonFromUrl(url) {
   query = query.split("?")[1];
 
   let index1 = query.indexOf("item"), index2 = query.indexOf("price");
-
-  result.item = query.substr(index1 + 5, index2 - index1 - 6);
-  result.price = query.substr(index2 + 6);
+  result.item = decodeURI(query.substr(index1 + 5, index2 - index1 - 6));
+  result.price = decodeURI(query.substr(index2 + 6));
   return result;
 }
 
