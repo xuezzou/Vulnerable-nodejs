@@ -295,7 +295,8 @@ The project would take the later half of the course. To check the mid-term succe
 
 ## Final Video demo
 
-Leave this for later. 
+[Final Video]
+[Final PPT](./final_ppt.pdf)
 
 ## References
 1. Code starter reference from [Learn the basics of REST and use them to build an easy, fast, single-page web app.](https://github.com/cwbuecheler/node-tutorial-2-restful-app)
